@@ -1,0 +1,34 @@
+repos:
+-   repo: git://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+    - id: trailing-whitespace
+    - id: check-added-large-files
+    - id: debug-statements
+    - id: end-of-file-fixer
+
+-   repo: https://gitlab.com/pycqa/flake8
+    rev: ''  # pick a git hash / tag to point to
+    hooks:
+    -   id: flake8
+        exclude: "^(.*/migrations/)"
+
+-   repo: https://github.com/asottile/reorder_python_imports
+    rev: master
+    hooks:
+    - id: reorder-python-imports
+      language_version: python3
+      exclude: |
+          (?x)^(
+              .*/migrations/.*
+          )$
+
+-   repo: https://github.com/psf/black
+    rev: 20.8b1
+    hooks:
+    - id: black
+      language_version: python3
+      exclude: |
+          (?x)^(
+              .*/migrations/.*
+          )$
