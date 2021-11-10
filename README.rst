@@ -34,7 +34,8 @@ Once the local webserver is running, you can access the website on
 If you want to make usage of virtualenvs smoother, consider installing
 `virtualenv-wrapper <https://virtualenvwrapper.readthedocs.io/en/latest/>`__
 
-## Development next steps
+Development next steps
+----------------------
 
 After you have the site running, you should install
 `pre-commit <https://pre-commit.com/>`__ before further changes. Once again,
