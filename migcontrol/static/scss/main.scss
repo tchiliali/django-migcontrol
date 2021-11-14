@@ -38,4 +38,6 @@ $warning:             $migcontrol-yellow;
 $danger:              $migcontrol-salmon;
 
 @import 'bootstrap/bootstrap';
+@import './hero';
 @import './footer';
+@import './nav';

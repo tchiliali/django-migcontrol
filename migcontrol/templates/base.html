@@ -1,4 +1,5 @@
 {% load static wagtailcore_tags wagtailuserbar %}
+{% load i18n %}
 {% load compress %}
 
 <!DOCTYPE html>
@@ -33,6 +34,21 @@
 <body class="{% block body_class %}{% endblock %}">
         {% wagtailuserbar %}
 
+<div class="container-fluid">
+<ul class="lang-chooser">
+{% for language_code, language_name in LANGUAGES %}
+    {% get_language_info for language_code as lang %}
+
+    {% language language_code %}
+        <li>
+        <a href="{% pageurl page.localized %}" rel="alternate" hreflang="{{ language_code }}" title="{{ lang.name_local }}">
+            {{ language_code }}
+        </a>
+        </li>
+    {% endlanguage %}
+{% endfor %}
+</ul>
+</div>
 
   <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
     <div class="container-fluid">
@@ -66,20 +82,44 @@
     {% block content %}{% endblock %}
   </div>
 
-  <footer class="footer">
+  <div class="hero">
     <div class="container">
-      Place sticky footer content here.
-    </div>
-  </footer>
+      <h3>Subscribe to our monthly review</h3>
+      <p>
+        <a href="">Show all issues &gt;</a>
+      </p>
+      <form>
 
-  <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
+      </form>
+    </div>
+  </div>
+
+<footer>
+  <nav class="navbar navbar-expand-md navbar-right navbar-dark bg-dark mb-4">
     <div class="container-fluid">
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#footernavbar" aria-controls="footernavbar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
+
       <span class="navbar-text">Copyright {% now "Y" %} Migration Control</span>
+      <div class="collapse navbar-collapse" id="footernavbar">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="#">{% trans "Imprint" %}</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">{% trans "Data protection" %}</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">{% trans "Contact" %}</a>
+        </li>
+      </ul>
+      </div>
+
+
     </div>
   </nav>
+</footer>
 
     {# Global javascript #}
     <script type="text/javascript" src="{% static 'js/migcontrol.js' %}"></script>

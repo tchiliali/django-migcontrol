@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "wagtail.contrib.forms",
     "wagtail.contrib.redirects",
     "wagtail.embeds",
+    "wagtail.locales",
     "wagtail.sites",
     "wagtail.users",
     "wagtail.snippets",
@@ -55,6 +56,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "wagtail.contrib.redirects.middleware.RedirectMiddleware",
 ]
 
@@ -73,6 +75,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.i18n",
             ],
         },
     },
@@ -141,6 +144,15 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
+
+LANGUAGES = [
+    ("ar", "Arabic"),
+    ("en", "English"),
+    ("fr", "French"),
+    ("de", "German"),
+]
+
+WAGTAIL_CONTENT_LANGUAGES = LANGUAGES
 
 TIME_ZONE = "UTC"
 
