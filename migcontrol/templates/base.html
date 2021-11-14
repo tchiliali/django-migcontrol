@@ -32,45 +32,73 @@
 </head>
 
 <body class="{% block body_class %}{% endblock %}">
-        {% wagtailuserbar %}
+  {% wagtailuserbar %}
 
-<div class="container-fluid">
-<ul class="lang-chooser">
-{% for language_code, language_name in LANGUAGES %}
-    {% get_language_info for language_code as lang %}
-
-    {% language language_code %}
-        <li>
-        <a href="{% pageurl page.localized %}" rel="alternate" hreflang="{{ language_code }}" title="{{ lang.name_local }}">
-            {{ language_code }}
-        </a>
+  <nav class="navbar navbar-light navbar-expand-md mb-0 migcontrol-navbar-top">
+    <div class="container-fluid">
+      <ul class="lang-chooser">
+      {% for language_code, language_name in LANGUAGES %}
+          {% get_language_info for language_code as lang %}
+          {% get_current_language as LANGUAGE_CODE %}
+          {% language language_code %}
+              <li>
+              <a class="{% if language_code == LANGUAGE_CODE %}active{% endif %}" href="{% pageurl page.localized %}" rel="alternate" hreflang="{{ language_code }}" title="{{ lang.name_local }}">
+                  {{ language_code }}
+              </a>
+              </li>
+          {% endlanguage %}
+      {% endfor %}
+      </ul>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#metamenucollapse" aria-controls="metamenucollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="metamenucollapse">
+        <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" aria-current="page" target="_blank" href="https://twitter.com/migcontrol"><i class="fab fa-twitter"></i></a>
         </li>
-    {% endlanguage %}
-{% endfor %}
-</ul>
-</div>
+        <li class="nav-item">
+          <a class="nav-link" aria-current="page" target="_blank" href="https://facebook.com/migcontrol"><i class="fab fa-facebook"></i></a>
+        </li>
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="#">Donate</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Subscribe</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link">Contact</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
 
   <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">Top navbar</a>
+      <a class="navbar-brand" href="#">[logo]</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navbarCollapse">
-        <ul class="navbar-nav me-auto mb-2 mb-md-0">
+        <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">Home</a>
+            <a class="nav-link" aria-current="page" href="#">About</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Link</a>
+            <a class="nav-link" href="#">Wiki</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link disabled">Disabled</a>
+            <a class="nav-link" href="#">Blog</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">Archive</a>
           </li>
         </ul>
-        <form class="d-flex">
+        <form class="search-form d-flex">
           <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-          <button class="btn btn-outline-success" type="submit">Search</button>
+          <button class="btn btn-success" type="submit">Search</button>
         </form>
       </div>
     </div>
@@ -78,24 +106,43 @@
 
 
 
-  <div class="container">
+  <div class="container migcontrol-contents-container">
     {% block content %}{% endblock %}
   </div>
 
   <div class="hero">
-    <div class="container">
+    <div class="container mb-5">
       <h3>Subscribe to our monthly review</h3>
       <p>
         <a href="">Show all issues &gt;</a>
       </p>
-      <form>
+      <div class="row">
+        <form class="col-md-4 offset-md-4">
+          <div class="row g-2">
+            <div class="col-md-8">
+              <label for="staticEmail2" class="visually-hidden">Email</label>
+              <input type="text" readonly class="form-control" id="staticEmail2" value="email@example.com">
+            </div>
+            <div class="col-auto">
+              <button type="submit" class="btn btn-light mb-3">Subscribe</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
 
-      </form>
+    <div class="container">
+      <h3>Social links</h3>
+      <p class="h3">
+        <a href="https://twitter.com/migcontrol" target="_blank"><i class="fab fa-twitter"></i></a>
+        <a href="https://www.facebook.com/migcontrol/" target="_blank"><i class="fab fa-facebook"></i></a>
+      </p>
+
     </div>
   </div>
 
 <footer>
-  <nav class="navbar navbar-expand-md navbar-right navbar-dark bg-dark mb-4">
+  <nav class="navbar navbar-expand-md navbar-right navbar-dark bg-dark">
     <div class="container-fluid">
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#footernavbar" aria-controls="footernavbar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>

@@ -7,11 +7,16 @@
 
     h3 {
         text-transform: uppercase;
+        font-size: 1.2em;
     }
 
     p, a
     {
         color: $white;
+    }
+
+    input {
+        background-color: $white;
     }
 
 }

@@ -4,12 +4,52 @@ ul.lang-chooser {
     padding: 0;
     li > a {
         text-transform: uppercase;
-        padding: 5px;
+        padding: 2px;
         border: 1px solid $migcontrol-grey;
         color: $migcontrol-grey;
         text-decoration: none;
     }
     li {
         display: inline-block;
+        margin-right: 5px;
     }
+    a.active {
+        color: $primary;
+    }
+}
+
+.navbar-dark .navbar-nav .nav-item .active {
+    color: $primary;
+}
+
+.navbar-dark .navbar-nav .nav-item {
+    color: $white;
+    font-weight: bold;
+}
+
+.navbar-dark .navbar-nav .nav-item .nav-link {
+    color: $white;
+}
+.navbar-dark .navbar-nav .nav-item .nav-link:hover {
+    color: $primary;
+}
+
+.navbar-dark .navbar-nav .nav-item,
+.navbar .navbar-nav .nav-item
+{
+    text-transform: uppercase;
+    color: $dark;
+}
+
+.bg-dark {
+    background-color: $migcontrol-dark-grey !important;
+}
+
+.search-form {
+    margin-left: 10px;
+}
+
+.migcontrol-navbar-top {
+    margin: 0;
+    padding: 0;
 }
