@@ -39,7 +39,7 @@
           {% get_current_language as LANGUAGE_CODE %}
           {% language language_code %}
               <li>
-              <a class="{% if language_code == LANGUAGE_CODE %}active{% endif %}" href="{% pageurl page.localized %}" rel="alternate" hreflang="{{ language_code }}" title="{{ lang.name_local }}">
+              <a class="{% if language_code == LANGUAGE_CODE %}active{% endif %}" href="{% if page %}{% pageurl page.localized %}{% else %}/{{ language_code }}{% endif %}" rel="alternate" hreflang="{{ language_code }}" title="{{ lang.name_local }}">
                   {{ language_code }}
               </a>
               </li>
@@ -93,8 +93,8 @@
             <a class="nav-link" href="#">Archive</a>
           </li>
         </ul>
-        <form class="search-form d-flex">
-          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <form class="search-form d-flex" action="{% url 'search' %}" method="GET">
+          <input name="query" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
           <button class="btn btn-success" type="submit">Search</button>
         </form>
       </div>
