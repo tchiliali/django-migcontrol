@@ -7,13 +7,11 @@ from wagtail.admin import urls as wagtailadmin_urls
 from wagtail.core import urls as wagtail_urls
 from wagtail.documents import urls as wagtaildocs_urls
 
+from blog import urls as blog_urls
 from search import views as search_views
 
 urlpatterns = [
-    path("django-admin/", admin.site.urls),
-    path("admin/", include(wagtailadmin_urls)),
     path("documents/", include(wagtaildocs_urls)),
-    path("search/", search_views.search, name="search"),
 ]
 
 
@@ -29,6 +27,9 @@ if settings.DEBUG:
 # Translatable URLs
 # These will be available under a language code prefix. For example /en/search/
 urlpatterns += i18n_patterns(
+    path("_admin/", admin.site.urls),
+    path("wagtail/", include(wagtailadmin_urls)),
     path("search/", search_views.search, name="search"),
+    path("blog/", include(blog_urls)),
     path("", include(wagtail_urls)),
 )

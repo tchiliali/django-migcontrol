@@ -1,0 +1,52 @@
+{% load wagtailcore_tags static %}
+{% load wagtailmarkdown %}
+
+<a class="blog-post-link" href="{% pageurl blog %}">
+    <h2>{{ blog.title }}</h2>
+</a>
+
+{% if blog.date %}
+    <div class="meta date">
+        {{ blog.date|date:"F jS, Y" }}
+        {{ blog.author }}
+    </div>
+{% endif %}
+
+{% if include_context == "index_page" %}
+<div class="blog-intro">
+    {{ blog.body|markdown|truncatewords_html:70 }}
+    <a href="{% pageurl blog %}">Read the rest of this entry &raquo;</a>
+</div>
+{% else %}
+<div class="blog-body">
+    {{ blog.body|markdown }}
+</div>
+{% endif %}
+
+
+<div class="blog-post-meta">
+    <div class="tags">
+        {% if blog.tags.all %}
+            Tags:
+                {% for tag in blog.tags.all %}
+                    <a href="{% url 'blog:tag' tag.slug %}/">{{ tag }}</a>{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+        {% endif %}
+    </div>
+    <div class="tags-and-comments">
+        {% if blog.categories.all %}
+            Posted in
+                {% for cat in blog.categories.all %}
+                    <a href="{% url 'blog:category' cat.category.slug %}">{{ cat.category.name }}</a>{% if not forloop.last %}, {% endif %}
+                {% endfor %} |
+        {% endif %}
+
+        <div id="comments" class="comments">
+        {% if COMMENTS_APP == 'django_comments_xtd' %}
+            {% include 'blog/blog_post_comments_xtd_link.html' with blog=blog %}
+        {% elif False %}
+            <a href="{% pageurl blog %}#disqus_thread">No Comments</a>
+        {% endif %}
+        </div>
+    </div>
+</div>

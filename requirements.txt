@@ -3,3 +3,5 @@ wagtail>=2.15,<2.16
 django_libsass
 django-compressor
 psycopg2-binary
+html2text
+wagtail-markdown<1
