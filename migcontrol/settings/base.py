@@ -191,6 +191,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
 
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 # Wagtail settings
 
 WAGTAIL_SITE_NAME = "migcontrol"
@@ -206,3 +208,12 @@ WAGTAILSEARCH_BACKENDS = {
 # Base URL to use when referring to full URLs within the Wagtail admin backend -
 # e.g. in notification emails. Don't include '/admin' or a trailing slash
 BASE_URL = "https://migcontrol.overtag.dk"
+
+
+# https://github.com/torchbox/wagtail-markdown
+# The EasyMDE editor is compatible with FontAwesome 5. By default EasyMDE will get version 4.7.0 from a CDN. To specify your own version, set
+
+WAGTAILMARKDOWN = {
+    # ...
+    "autodownload_fontawesome": False,
+}

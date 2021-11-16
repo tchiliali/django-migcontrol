@@ -19,7 +19,7 @@ ul.lang-chooser {
     }
 }
 
-.navbar-dark .navbar-nav .nav-item .active {
+.navbar-dark .navbar-nav .nav-item > .nav-link.active {
     color: $primary;
 }
 

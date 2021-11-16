@@ -87,7 +87,8 @@
             <a class="nav-link" href="#">Wiki</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Blog</a>
+            {% slugurl 'blog' as blog_url %}
+            <a class="nav-link{% if page.url == blog_url %} active{% endif %}" href="{{ blog_url }}">Blog</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#">Archive</a>
