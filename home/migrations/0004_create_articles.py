@@ -2,7 +2,12 @@ from django.db import migrations
 
 # slug: title
 pages = {
-
+    "about": "About",
+    "contact": "Contact",
+    "donate": "Donate",
+    "subscribe": "Subscribe",
+    "imprint": "Imprint",
+    "data-protection": "Data protection",
 }
 
 
@@ -16,7 +21,7 @@ def create_pages(apps, schema_editor):
 
     # Create content type for blogindexpage model
     homepage_content_type, __ = ContentType.objects.get_or_create(
-        model='homepage', app_label='home')
+        model='article', app_label='home')
 
     home = Page.objects.get(pk=Site.objects.get(is_default_site=True).root_page.pk)
     locale = Locale.objects.get(pk=LocaleNonMigrated.get_default().pk)
@@ -52,7 +57,7 @@ def remove_pages(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('home', '0002_create_homepage'),
+        ('home', '0003_article'),
         ('wagtailcore', '0053_locale_model'),
     ]
 

@@ -28,7 +28,7 @@
 
 </head>
 
-<body class="{% block body_class %}{% endblock %}">
+<body>
   {% wagtailuserbar %}
 
   <nav class="navbar navbar-light navbar-expand-md mb-0 migcontrol-navbar-top">
@@ -55,16 +55,19 @@
           <a class="nav-link" aria-current="page" target="_blank" href="https://twitter.com/migcontrol"><i class="fab fa-twitter"></i></a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" aria-current="page" target="_blank" href="https://facebook.com/migcontrol"><i class="fab fa-facebook"></i></a>
+          <a class="nav-link" aria-current="page" target="_blank" href="https://www.facebook.com/migcontrol"><i class="fab fa-facebook"></i></a>
         </li>
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="#">Donate</a>
+            {% slugurl 'donate' as donate_url %}
+            <a class="nav-link{% if page.url == donate_url %} active{% endif %}" href="{{ donate_url }}">{% trans "Donate" %}</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Subscribe</a>
+            {% slugurl 'subscribe' as subscribe_url %}
+            <a class="nav-link{% if page.url == subscribe_url %} active{% endif %}" href="{{ subscribe_url }}">{% trans "Subscribe" %}</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link">Contact</a>
+            {% slugurl 'contact' as contact_url %}
+            <a class="nav-link{% if page.url == contact_url %} active{% endif %}" href="{{ contact_url }}">{% trans "Contact" %}</a>
           </li>
         </ul>
       </div>
@@ -81,22 +84,23 @@
       <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item">
-            <a class="nav-link" aria-current="page" href="#">About</a>
+            {% slugurl 'about' as about_url %}
+            <a class="nav-link{% if page.url == about_url %} active{% endif %}" href="{{ about_url }}">{% trans "About" %}</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Wiki</a>
+            <a class="nav-link" href="#">{% trans "Wiki" %}</a>
           </li>
           <li class="nav-item">
             {% slugurl 'blog' as blog_url %}
-            <a class="nav-link{% if page.url == blog_url %} active{% endif %}" href="{{ blog_url }}">Blog</a>
+            <a class="nav-link{% if page.url == blog_url %} active{% endif %}" href="{{ blog_url }}">{% trans "Blog" %}</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">Archive</a>
+            <a class="nav-link" href="#">{% trans "Archive" %}</a>
           </li>
         </ul>
         <form class="search-form d-flex" action="{% url 'search' %}" method="GET">
           <input name="query" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-          <button class="btn btn-success" type="submit">Search</button>
+          <button class="btn btn-success" type="submit">{% trans "Search" %}</button>
         </form>
       </div>
     </div>
@@ -118,11 +122,11 @@
         <form class="col-md-4 offset-md-4">
           <div class="row g-2">
             <div class="col-md-8">
-              <label for="staticEmail2" class="visually-hidden">Email</label>
+              <label for="staticEmail2" class="visually-hidden">{% trans "Email" %}</label>
               <input type="text" class="form-control" id="staticEmail2" placeholder="email@example.com">
             </div>
             <div class="col-auto">
-              <button type="submit" class="btn btn-light mb-3">Subscribe</button>
+              <button type="submit" class="btn btn-light mb-3">{% trans "Subscribe" %}</button>
             </div>
           </div>
         </form>
@@ -150,13 +154,16 @@
       <div class="collapse navbar-collapse" id="footernavbar">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
-          <a class="nav-link" href="#">{% trans "Imprint" %}</a>
+          {% slugurl 'imprint' as imprint_url %}
+          <a class="nav-link{% if page.url == imprint_url %} active{% endif %}" href="{{ imprint_url }}">{% trans "Imprint" %}</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">{% trans "Data protection" %}</a>
+          {% slugurl 'data-protection' as data_protection_url %}
+          <a class="nav-link{% if page.url == data_protection_url %} active{% endif %}" href="{{ data_protection_url }}">{% trans "Data protection" %}</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">{% trans "Contact" %}</a>
+          {% slugurl 'contact' as contact_url %}
+          <a class="nav-link{% if page.url == contact_url %} active{% endif %}" href="{{ contact_url }}">{% trans "Contact" %}</a>
         </li>
       </ul>
       </div>
