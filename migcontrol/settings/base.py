@@ -146,9 +146,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
+# English needs to be first because of a certain language migration
 LANGUAGES = [
-    ("ar", "Arabic"),
     ("en", "English"),
+    ("ar", "Arabic"),
     ("fr", "French"),
     ("de", "German"),
 ]
