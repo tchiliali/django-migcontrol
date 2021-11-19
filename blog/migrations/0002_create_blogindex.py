@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('blog', '0001_initial'),
-        ('home', '0002_create_homepage'),
+        ('home', '0004_create_articles'),
     ]
 
     operations = [

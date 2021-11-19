@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "wagtail.search",
     "wagtail.admin",
     "wagtail.core",
+    "wagtail.contrib.simple_translation",
     "modelcluster",
     "taggit",
     "django.contrib.admin",
@@ -146,9 +147,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
+# English needs to be first because of a certain language migration
 LANGUAGES = [
-    ("ar", "Arabic"),
     ("en", "English"),
+    ("ar", "Arabic"),
     ("fr", "French"),
     ("de", "German"),
 ]
@@ -162,6 +164,8 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+WAGTAIL_I18N_ENABLED = True
 
 
 # Static files (CSS, JavaScript, Images)
