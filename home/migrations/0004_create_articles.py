@@ -56,7 +56,7 @@ def create_pages_and_locales(apps, schema_editor):
                 path="0001000{}".format(home_index+1),
                 depth=2,
                 numchild=0,
-                url_path="/home-{language_code}/",
+                url_path=f"/home-{language_code}/",
                 translation_key=homepage_translation_key,
                 live=True,
             )
@@ -71,7 +71,7 @@ def create_pages_and_locales(apps, schema_editor):
                 slug=f"{slug}",
                 content_type=article_content_type,
                 locale=locale,
-                path=f"00010001000{index_offset}",
+                path=f"{home.path}000{index_offset}",
                 depth=3,
                 numchild=0,
                 translation_key=translation_key,

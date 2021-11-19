@@ -25,9 +25,6 @@ To get started, run the following commands:
     # Remember to always run this step when migrations change
     python manage.py migrate
 
-    # Workaround: This is a work-around for an ongoing bug
-    python manage.py fixtree
-
     # Run the development webserver
     python manage.py runserver
 
