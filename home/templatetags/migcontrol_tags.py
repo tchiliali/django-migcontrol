@@ -18,26 +18,21 @@ def slugurl_localized(context, slug):
     is not available in the context, then returns the URL for the first page
     that matches the slug on any site.
     """
+    page = None
     try:
-        page = None
-        try:
-            site = Site.find_for_request(context["request"])
-            current_site = site
-        except KeyError:
-            # No site object found - allow the fallback below to take place.
-            pass
-        else:
-            if current_site is not None:
-                page = Page.objects.in_site(current_site).filter(slug=slug).first()
+        site = Site.find_for_request(context["request"])
+        current_site = site
+    except KeyError:
+        # No site object found - allow the fallback below to take place.
+        pass
+    else:
+        if current_site is not None:
+            page = Page.objects.in_site(current_site).filter(slug=slug).first()
 
-        # If no page is found, fall back to searching the whole tree.
-        if page is None:
-            page = Page.objects.filter(slug=slug).first()
+    # If no page is found, fall back to searching the whole tree.
+    if page is None:
+        page = Page.objects.filter(slug=slug).first()
 
-        if page:
-            # call pageurl() instead of page.relative_url() here so we get the ``accepts_kwarg`` logic
-            return pageurl(context, page.localized)
-
-    except Exception as e:
-        print(e)
-        raise
+    if page:
+        # call pageurl() instead of page.relative_url() here so we get the ``accepts_kwarg`` logic
+        return pageurl(context, page.localized)

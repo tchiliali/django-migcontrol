@@ -84,9 +84,6 @@ def create_pages_and_locales(apps, schema_editor):
 
             home.add_child(instance=article)
 
-    # Workaround: We are doing something wrong in the tree paths, this fixes it
-    call_command("fixtree")
-
 
 def remove_pages(apps, schema_editor):
     # Get models
