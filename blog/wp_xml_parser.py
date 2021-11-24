@@ -126,8 +126,13 @@ class XML_parser(object):
 
                 ret_dict["terms"]["post_tag"].append(tag_dict)
             # else use tagname:tag inner test
+            elif e.text and e.text.strip():
+                ret_dict[e.tag] = e.text.strip()
             else:
-                ret_dict[e.tag] = e.text
+                if e.tag in ret_dict.keys():
+                    ret_dict[e.tag].append(e.getchildren())
+                else:
+                    ret_dict[e.tag] = [e.getchildren()]
             # remove empty accumulators
         empty_keys = [k for k, v in ret_dict["terms"].items() if not v]
         for k in empty_keys:
@@ -186,6 +191,10 @@ class XML_parser(object):
         ret_dict["date"] = self.convert_date(
             item_dict["pubDate"], fallback=item_dict.get("{wp}post_date", "")
         )
+        ret_dict["meta"] = {}
+        for (key, value) in item_dict["{wp}postmeta"]:
+            if key.text:
+                ret_dict["meta"][key.text] = value.text
         return ret_dict
 
     def translate_wp_comment(self, e):
@@ -232,14 +241,12 @@ class XML_parser(object):
         items = self.chan.findall(
             "item"
         )  # (e for e in chan.getchildren() if e.tag=='item')
+
         # turn item element into a generic dict
         item_dict_gen = (self.item_dict(item) for item in items)
+
         # transform the generic dict to one with the expected JSON keys
-        all_the_data = [
-            self.translate_item(item)
-            for item in item_dict_gen
-            if self.translate_item(item)
-        ]
+        all_the_data = [self.translate_item(item) for item in item_dict_gen]
         return all_the_data
 
     def get_comments_data(self, slug):

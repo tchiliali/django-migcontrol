@@ -5,3 +5,4 @@ django-compressor
 psycopg2-binary
 html2text
 wagtail-markdown<1
+django-countries>=7,<8

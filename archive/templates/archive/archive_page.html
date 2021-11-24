@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+
+<h1>{{ page.title }}</h1>
+
+<ul>
+  <li><strong>{% trans "Organization type" %}</strong>: {{ page.organization_type }}</li>
+</ul>
+
+{{ page.description|richtext }}
+
+{% endblock content %}

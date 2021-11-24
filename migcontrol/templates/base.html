@@ -97,7 +97,8 @@
             <a class="nav-link{% if page.url == blog_url %} active{% endif %}" href="{{ blog_url }}">{% trans "Blog" %}</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#">{% trans "Archive" %}</a>
+            {% slugurl_localized 'archive' as archive_url %}
+            <a class="nav-link{% if page.url == archive_url %} active{% endif %}" href="{{ archive_url }}">{% trans "Archive" %}</a>
           </li>
         </ul>
         <form class="search-form d-flex" action="{% url 'search' %}" method="GET">

@@ -2,7 +2,6 @@ import uuid
 
 from django.conf import settings
 from django.db import migrations
-from django.core.management import call_command
 
 # slug: title, translation_key
 homepage_translation_key = uuid.uuid4()
@@ -25,7 +24,6 @@ def create_pages_and_locales(apps, schema_editor):
     Locale = apps.get_model('wagtailcore.Locale')
     HomePage = apps.get_model('home.HomePage')
     from wagtail.core.models import Page, Locale as LocaleNonMigrated  # noqa
-    from django.contrib.contenttypes.models import ContentType as ContentTypeNonMigrated
 
     # Create content type for blogindexpage model
     article_content_type, __ = ContentType.objects.get_or_create(
@@ -34,14 +32,9 @@ def create_pages_and_locales(apps, schema_editor):
     homepage_content_type, __ = ContentType.objects.get_or_create(
         model='homepage', app_label='home')
 
-    # Get a version from outside of migrations
-    homepage_content_type_non_migrated = ContentTypeNonMigrated.objects.get(
-        model='homepage', app_label='home')
-
     for home_index, (language_code, language_name) in enumerate(settings.LANGUAGES):
 
         locale, __ = Locale.objects.get_or_create(language_code=language_code)
-        locale_non_migrated = LocaleNonMigrated.objects.get(language_code=language_code)
 
         if language_code == "en":
             home = Page.objects.get(pk=Site.objects.get(is_default_site=True).root_page.pk)
