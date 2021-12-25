@@ -180,6 +180,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "--locale", type=str, default=None, help="Hard-code a locale"
         )
+        parser.add_argument(
+            "--create-other-locales",
+            type=str,
+            default=None,
+            help="Create versions in other locales",
+        )
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -189,6 +195,7 @@ class Command(BaseCommand):
         self.PostModel = apps.get_model(options["app"], options["post_model"])
         self.xml_path = options.get("xml")
         self.locale = options.get("locale", None)
+        self.create_other_locales = options.get("create_other_locales", False)
         self.mappings = WP_POSTMETA_MAPPING.get(
             "{}.{}".format(options["app"].lower(), options["post_model"].lower()), {}
         )
@@ -409,7 +416,7 @@ class Command(BaseCommand):
     ):
         """create Blog post entries from wordpress data"""
         for post in posts:
-            # post_id = post.get("ID")
+            post_id = post.get("ID")
             title = post.get("title")
             if title:
                 new_title = self.convert_html_entities(title)
@@ -432,68 +439,90 @@ class Command(BaseCommand):
             # categories = post.get("terms")
             # format the date
             # date = post.get("date")[:10]
-            try:
-                new_entry = self.PostModel.objects.get(slug=slug)
-                new_entry.title = title
-                new_entry.owner = user
-                new_entry.author = user
-            except self.PostModel.DoesNotExist:
-                post_model_kwargs = {}
-                if self.locale:
-                    post_model_kwargs["locale"] = Locale.objects.get(
-                        language_code=self.locale
-                    )
-                    post_model_kwargs["translation_key"] = uuid.uuid4()
 
-                new_entry = blog_index.add_child(
-                    instance=self.PostModel(
-                        title=title,
-                        slug=slug,
-                        search_description="description",
-                        # date=date,
-                        # bbody_richtext=body,
-                        owner=user,
-                        author=user,
-                        description=body,
-                        # body_markdown=html2text.html2text(body, bodywidth=0),
-                        **post_model_kwargs,
-                    )
+            post_model_kwargs = {}
+            if self.locale:
+                post_model_kwargs["locale"] = Locale.objects.get(
+                    language_code=self.locale
+                )
+                post_model_kwargs["translation_key"] = uuid.uuid4()
+
+            post_model_kwargs = post.get("featured_image")
+
+            self.create_page(
+                self.index_page,
+                self.locale,
+                post_id,
+                title,
+                slug,
+                body,
+                user,
+                post.get("meta"),
+                **post_model_kwargs,
+            )
+
+    def create_page(
+        self, index, locale, post_id, title, slug, body, user, meta, **kwargs
+    ):
+
+        try:
+            new_entry = self.PostModel.objects.get(slug=slug)
+            new_entry.title = title
+            new_entry.owner = user
+            new_entry.author = user
+            new_entry.wordpress_post_id = post_id
+        except self.PostModel.DoesNotExist:
+
+            new_entry = index.add_child(
+                instance=self.PostModel(
+                    title=title,
+                    slug=slug,
+                    search_description="description",
+                    # date=date,
+                    # bbody_richtext=body,
+                    owner=user,
+                    author=user,
+                    description=body,
+                    # body_markdown=html2text.html2text(body, bodywidth=0),
+                    locale=locale,
+                    **kwargs,
+                )
+            )
+
+        new_entry.country = []
+        for key, value in meta.items():
+            if key in self.mappings.keys():
+                print(f"Setting {key}")
+                setattr(
+                    new_entry,
+                    self.mappings[key][0],
+                    self.mappings[key][1](value, new_entry, self.index_page),
                 )
 
-            new_entry.country = []
-            for key, value in post.get("meta").items():
-                print(key)
-                if key in self.mappings.keys():
-                    print(f"Setting {key}")
-                    setattr(
-                        new_entry,
-                        self.mappings[key][0],
-                        self.mappings[key][1](value, new_entry, self.index_page),
-                    )
+        new_entry.save()
 
-            new_entry.save()
+        featured_image = kwargs.get("featured_image", None)
 
-            featured_image = post.get("featured_image")
-            if featured_image is not None:
-                title = post["featured_image"]["title"]
-                source = post["featured_image"]["source"]
-                path, file_ = os.path.split(source)
-                source = source.replace("stage.swoon", "swoon")
-                try:
-                    remote_image = urllib.request.urlretrieve(self.prepare_url(source))
-                    width = 640
-                    height = 290
-                    header_image = Image(title=title, width=width, height=height)
-                    header_image.file.save(file_, File(open(remote_image[0], "rb")))
-                    header_image.save()
-                except UnicodeEncodeError:
-                    header_image = None
-                    print("unable to set header image {}".format(source))
-            else:
+        if featured_image is not None:
+            title = featured_image["title"]
+            source = featured_image["source"]
+            __, file_ = os.path.split(source)
+            source = source.replace("stage.swoon", "swoon")
+            try:
+                remote_image = urllib.request.urlretrieve(self.prepare_url(source))
+                width = 640
+                height = 290
+                header_image = Image(title=title, width=width, height=height)
+                header_image.file.save(file_, File(open(remote_image[0], "rb")))
+                header_image.save()
+            except UnicodeEncodeError:
                 header_image = None
-            new_entry.header_image = header_image
-            new_entry.save()
-            # if categories:
-            #     self.create_categories_and_tags(new_entry, categories)
-            # if self.should_import_comments:
-            #     self.import_comments(post_id, slug)
+                print("unable to set header image {}".format(source))
+        else:
+            header_image = None
+        new_entry.header_image = header_image
+        new_entry.save()
+        # if categories:
+        #     self.create_categories_and_tags(new_entry, categories)
+        # if self.should_import_comments:
+        #     self.import_comments(post_id, slug)
