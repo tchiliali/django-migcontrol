@@ -7,4 +7,4 @@ html2text
 wagtail-markdown<1
 django-countries>=7,<8
 django-modeltranslation
-django-modeltranslation-wagtail>=0.4
+django-modeltranslation-wagtail>=0.4.1

@@ -10,6 +10,8 @@ from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.core.management.base import CommandError
 from django.db import transaction
+from django.db.models import Q
+from django.utils import translation
 from django.utils.html import linebreaks
 from django.utils.text import slugify
 from wagtail.core.models import Locale
@@ -178,6 +180,11 @@ class Command(BaseCommand):
             "--post-model", default=False, help="Django app post page model"
         )
         parser.add_argument(
+            "--use-wagtail-locale",
+            default=False,
+            help="Uses the Wagtail locale and translation_key",
+        )
+        parser.add_argument(
             "--locale", type=str, default=None, help="Hard-code a locale"
         )
         parser.add_argument(
@@ -195,18 +202,21 @@ class Command(BaseCommand):
         self.PostModel = apps.get_model(options["app"], options["post_model"])
         self.xml_path = options.get("xml")
         self.locale = options.get("locale", None)
+        self.wagtail_locale = options.get("use_wagtail_locale", False)
         self.create_other_locales = options.get("create_other_locales", False)
         self.mappings = WP_POSTMETA_MAPPING.get(
             "{}.{}".format(options["app"].lower(), options["post_model"].lower()), {}
         )
         try:
             self.index_page = self.IndexModel.objects.get(
+                Q(locale__language_code__iexact=self.locale)
+                if self.wagtail_locale
+                else Q(),
                 slug__iexact=options["index_slug"],
-                locale__language_code__iexact=self.locale,
             )
         except self.IndexModel.DoesNotExist:
             raise CommandError(
-                "Incorrect blog index slug {} - have you created it?".format(
+                "Incorrect blog index slug '{}' - have you created it?".format(
                     options["index_slug"]
                 )
             )
@@ -441,17 +451,19 @@ class Command(BaseCommand):
             # date = post.get("date")[:10]
 
             post_model_kwargs = {}
+            restore_locale = translation.get_language()
+            locale = None
             if self.locale:
-                post_model_kwargs["locale"] = Locale.objects.get(
-                    language_code=self.locale
-                )
-                post_model_kwargs["translation_key"] = uuid.uuid4()
-
-            post_model_kwargs = post.get("featured_image")
+                if self.wagtail_locale:
+                    locale = Locale.objects.get(language_code=self.locale)
+                    post_model_kwargs["translation_key"] = uuid.uuid4()
+                else:
+                    translation.activate(self.locale)
+            # post_model_kwargs["featured_image"] = post.get("featured_image")
 
             self.create_page(
                 self.index_page,
-                self.locale,
+                locale,
                 post_id,
                 title,
                 slug,
@@ -460,6 +472,7 @@ class Command(BaseCommand):
                 post.get("meta"),
                 **post_model_kwargs,
             )
+            translation.activate(restore_locale)
 
     def create_page(
         self, index, locale, post_id, title, slug, body, user, meta, **kwargs
