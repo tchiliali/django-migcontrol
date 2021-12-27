@@ -505,11 +505,12 @@ class Command(BaseCommand):
         new_entry.country = []
         for key, value in meta.items():
             if key in self.mappings.keys():
-                print(f"Setting {key}")
+                value = self.mappings[key][1](value, new_entry, self.index_page)
+                print(f"Setting {key} to {value}")
                 setattr(
                     new_entry,
                     self.mappings[key][0],
-                    self.mappings[key][1](value, new_entry, self.index_page),
+                    value,
                 )
 
         new_entry.save()

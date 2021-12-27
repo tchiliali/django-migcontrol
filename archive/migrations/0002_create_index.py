@@ -17,8 +17,9 @@ def create_archiveindex(apps, schema_editor):
     locale = Locale.objects.get(pk=LocaleNonMigrated.get_default().pk)
 
     # Create a new homepage
-    archiveindex= ArchiveIndexPage(
+    archiveindex = ArchiveIndexPage(
         title="Archive",
+        title_en="Archive",
         draft_title="Archive",
         slug='archive',
         content_type=archiveindex_content_type,

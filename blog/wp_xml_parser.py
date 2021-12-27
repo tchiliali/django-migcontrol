@@ -15,6 +15,7 @@ class XML_parser(object):
         xml_string = self.prep_xml(open(xml_path, "r").read())
         root = etree.XML(xml_string)
         self.chan = root.find("channel")
+        self.authors = self.get_author_dict(self.chan)
         self.category_dict = self.get_category_dict(self.chan)
         self.tags_dict = self.get_tags_dict(self.chan)
 
@@ -52,6 +53,19 @@ class XML_parser(object):
             tags_dict[slug]["name"] = name
             tags_dict[slug]["taxonomy"] = "post_tag"
         return tags_dict
+
+    def get_author_dict(self, chan):
+        authors = chan.findall("./{wp}author")
+        author_dict = {}
+        for author in authors:
+            username = author.find("./{wp}author_login").text
+            author_dict[username] = {
+                "username": username,
+                "email": author.find("./{wp}author_email").text,
+                "first_name": author.find("./{wp}author_first_name").text,
+                "last_name": author.find("./{wp}author_last_name").text,
+            }
+        return author_dict
 
     @staticmethod
     def remove_encoding(xml_string):
@@ -177,16 +191,12 @@ class XML_parser(object):
         ret_dict["slug"] = item_dict.get("{wp}post_name") or re.sub(
             item_dict["title"], " ", "-"
         )
-        ret_dict["ID"] = item_dict["guid"]
+        ret_dict["ID"] = item_dict["{wp}post_id"]
         ret_dict["title"] = item_dict["title"]
         ret_dict["description"] = item_dict["description"]
         ret_dict["content"] = item_dict["{content}encoded"]
         # fake user object
-        ret_dict["author"] = {
-            "username": item_dict["{dc}creator"],
-            "first_name": "",
-            "last_name": "",
-        }
+        ret_dict["author"] = self.authors[item_dict["{dc}creator"]]
         ret_dict["terms"] = item_dict.get("terms")
         ret_dict["date"] = self.convert_date(
             item_dict["pubDate"], fallback=item_dict.get("{wp}post_date", "")
