@@ -6,5 +6,4 @@ psycopg2-binary
 html2text
 wagtail-markdown<1
 django-countries>=7,<8
-django-modeltranslation
-django-modeltranslation-wagtail>=0.4.1
+wagtail-localize>=1.0.1,<1.1
