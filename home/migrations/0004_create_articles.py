@@ -24,6 +24,7 @@ def create_pages_and_locales(apps, schema_editor):
     Locale = apps.get_model('wagtailcore.Locale')
     HomePage = apps.get_model('home.HomePage')
     from wagtail.core.models import Page, Locale as LocaleNonMigrated  # noqa
+    from wagtail_localize.models import TranslatableObject
 
     # Create content type for blogindexpage model
     article_content_type, __ = ContentType.objects.get_or_create(

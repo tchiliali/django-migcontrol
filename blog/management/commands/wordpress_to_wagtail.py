@@ -181,7 +181,7 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--use-wagtail-locale",
-            default=False,
+            action="store_true",
             help="Uses the Wagtail locale and translation_key",
         )
         parser.add_argument(
