@@ -31,7 +31,7 @@ def create_blogindex(apps, schema_editor):
             path=home.path + "0001",
             depth=3,
             numchild=0,
-            url_path=home.url_path + "archive/",
+            url_path=home.url_path + "blog/",
             live=True,
         )
 

@@ -61,3 +61,9 @@ Here is an example to import an XML dump of the German Wordpress Archive data:
 .. code-block:: console
 
     python manage.py wordpress_to_wagtail --use-wagtail-locale --locale de --app archive --index-model ArchiveIndexPage --post-model ArchivePage /path/to/archives_dump.xml archive
+
+After importing stuff, you can make the new pages ready for translation by synchronizing between mapped languages:
+
+.. code-block:: console
+
+    python manage.py sync_locale_trees
