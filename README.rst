@@ -48,3 +48,16 @@ make sure that your virtualenv is active and then run:
 
 Nothing will happen after this, but in the future your git commits will be
 verified locally.
+
+
+Importing old Wordpress data
+----------------------------
+
+The import management command will be adapted to accommodate various types of
+dumps from the previous Wordpress site.
+
+Here is an example to import an XML dump of the German Wordpress Archive data:
+
+.. code-block:: console
+
+    python manage.py wordpress_to_wagtail --use-wagtail-locale --locale de --app archive --index-model ArchiveIndexPage --post-model ArchivePage /path/to/archives_dump.xml archive
