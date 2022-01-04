@@ -3,6 +3,7 @@ import re
 import urllib.request
 import uuid
 
+import html2text
 from bs4 import BeautifulSoup
 from django.apps import apps
 from django.contrib.auth import get_user_model
@@ -151,7 +152,45 @@ WP_POSTMETA_MAPPING = {
         "land": ("country", get_country),
         "standorte": ("locations", get_locations),
         "kurztext": ("short_description", noop_mapping),
+    },
+    "blog.blogpage": {},
+}
+
+
+def get_archive_page_mapping(
+    index, locale, post_id, title, date, slug, body, user, meta
+):
+    return {
+        "title": title,
+        "slug": slug,
+        "search_description": None,
+        # date=date,
+        # bbody_richtext=body,
+        "owner": user,
+        "author": user,
+        "description": body,
+        # body_markdown=html2text.html2text(body, bodywidth=0),
+        "locale": locale,
     }
+
+
+def get_blog_page_mapping(index, locale, post_id, title, date, slug, body, user, meta):
+    return {
+        "title": title,
+        "slug": slug,
+        "search_description": "none",
+        "date": date,
+        "body_richtext": body,
+        "owner": user,
+        # "author": user,
+        "body_markdown": html2text.html2text(body, bodywidth=0),
+        "locale": locale,
+    }
+
+
+WP_POST_MAPPING = {
+    "archive.archivepage": get_archive_page_mapping,
+    "blog.blogpage": get_blog_page_mapping,
 }
 
 
@@ -204,7 +243,10 @@ class Command(BaseCommand):
         self.locale = options.get("locale", None)
         self.wagtail_locale = options.get("use_wagtail_locale", False)
         self.create_other_locales = options.get("create_other_locales", False)
-        self.mappings = WP_POSTMETA_MAPPING.get(
+        self.meta_mappings = WP_POSTMETA_MAPPING.get(
+            "{}.{}".format(options["app"].lower(), options["post_model"].lower()), {}
+        )
+        self.mappings = WP_POST_MAPPING.get(
             "{}.{}".format(options["app"].lower(), options["post_model"].lower()), {}
         )
         try:
@@ -224,7 +266,6 @@ class Command(BaseCommand):
         self.xml_parser = XML_parser(self.xml_path)
         posts = self.xml_parser.get_posts_data()
 
-        # self.should_import_comments = options.get("import_comments")
         self.create_blog_pages(posts, self.index_page)
 
     def prepare_url(self, url):
@@ -292,98 +333,6 @@ class Command(BaseCommand):
             user.save()
         return user
 
-    #
-    #     def create_comment(self, blog_post_type, blog_post_id, comment_text, date):
-    #         from django_comments_xtd.models import MaxThreadLevelExceededException
-    #         from django_comments_xtd.models import XtdComment
-    #         # Assume that the timezone wanted is the one that's active during parsing
-    #         if date is not None and settings.USE_TZ and timezone.is_naive(date):
-    #             date = timezone.make_aware(date, timezone.get_current_timezone())
-    #
-    #         new_comment = XtdComment.objects.get_or_create(
-    #             site_id=self.site_id,
-    #             content_type=blog_post_type,
-    #             object_pk=blog_post_id,
-    #             comment=comment_text,
-    #             submit_date=date,
-    #         )[0]
-    #         return new_comment
-    #
-    #     def lookup_comment_by_wordpress_id(self, comment_id, comments):
-    #         """ Returns Django comment object with this wordpress id """
-    #         for comment in comments:
-    #             if comment.wordpress_id == comment_id:
-    #                 return comment
-    #
-    #     def import_comments(  # noqa: max-complexity=18
-    #         self, post_id, slug, *args, **options
-    #     ):
-    #         try:
-    #             mysite = Site.objects.get_current()
-    #             self.site_id = mysite.id
-    #         except Site.DoesNotExist:
-    #             print("site does not exist")
-    #             return
-    #         if getattr(self, "xml_path", None):
-    #             comments = self.xml_parser.get_comments_data(slug)
-    #         else:
-    #             comments = self.get_posts_data(self.url, post_id, get_comments=True)
-    #         imported_comments = []
-    #         for comment in comments:
-    #             try:
-    #                 blog_post = self.PostModel.objects.get(slug=slug)
-    #                 blog_post_type = ContentType.objects.get_for_model(blog_post)
-    #             except self.PostModel.DoesNotExist:
-    #                 print("cannot find this blog post")
-    #                 continue
-    #             comment_text = self.convert_html_entities(comment.get("content"))
-    #             date = datetime.strptime(comment.get("date"), "%Y-%m-%dT%H:%M:%S")
-    #             status = comment.get("status")
-    #             if status != "approved":
-    #                 continue
-    #             comment_author = comment.get("author")
-    #             new_comment = self.create_comment(
-    #                 blog_post_type, blog_post.pk, comment_text, date
-    #             )
-    #             new_comment.wordpress_id = comment.get("ID")
-    #             new_comment.parent_wordpress_id = comment.get("parent")
-    #             if type(comment_author) is int:
-    #                 pass
-    #             else:
-    #                 if "username" in comment_author:
-    #                     user_name = comment["author"]["username"]
-    #                     user_url = comment["author"]["URL"]
-    #                     try:
-    #                         current_user = User.objects.get(username=user_name)
-    #                         new_comment.user = current_user
-    #                     except User.DoesNotExist:
-    #                         pass
-    #
-    #                     new_comment.user_name = user_name
-    #                     new_comment.user_url = user_url
-    #
-    #             new_comment.save()
-    #             imported_comments.append(new_comment)
-
-    #
-    #         # Now assign parent comments
-    #         for comment in imported_comments:
-    #             if str(comment.parent_wordpress_id or 0) == "0":
-    #                 continue
-    #             for sub_comment in imported_comments:
-    #                 if sub_comment.wordpress_id == comment.parent_wordpress_id:
-    #                     comment.parent_id = sub_comment.id
-    #                     try:
-    #                         comment._calculate_thread_data()
-    #                         comment.save()
-    #                     except MaxThreadLevelExceededException:
-    #                         print(
-    #                             "Warning, max thread level exceeded on {}".format(
-    #                                 comment.id
-    #                             )
-    #                         )
-    #                     break
-
     def create_categories_and_tags(self, page, categories):
         tags_for_blog_entry = []
         categories_for_blog_entry = []
@@ -431,7 +380,7 @@ class Command(BaseCommand):
             if title:
                 new_title = self.convert_html_entities(title)
                 title = new_title
-            slug = post.get("slug")
+            slug = slugify(post.get("slug"))
             description = post.get("description")
             if description:
                 description = self.convert_html_entities(description)
@@ -448,7 +397,7 @@ class Command(BaseCommand):
             user = self.create_user(author)
             # categories = post.get("terms")
             # format the date
-            # date = post.get("date")[:10]
+            date = post.get("date")[:10]
 
             post_model_kwargs = {}
             restore_locale = translation.get_language()
@@ -466,6 +415,7 @@ class Command(BaseCommand):
                 locale,
                 post_id,
                 title,
+                date,
                 slug,
                 body,
                 user,
@@ -475,7 +425,7 @@ class Command(BaseCommand):
             translation.activate(restore_locale)
 
     def create_page(
-        self, index, locale, post_id, title, slug, body, user, meta, **kwargs
+        self, index, locale, post_id, title, date, slug, body, user, meta, **kwargs
     ):
 
         try:
@@ -488,28 +438,21 @@ class Command(BaseCommand):
 
             new_entry = index.add_child(
                 instance=self.PostModel(
-                    title=title,
-                    slug=slug,
-                    search_description="description",
-                    # date=date,
-                    # bbody_richtext=body,
-                    owner=user,
-                    author=user,
-                    description=body,
-                    # body_markdown=html2text.html2text(body, bodywidth=0),
-                    locale=locale,
+                    **self.mappings(
+                        index, locale, post_id, title, date, slug, body, user, meta
+                    ),
                     **kwargs,
                 )
             )
 
         new_entry.country = []
         for key, value in meta.items():
-            if key in self.mappings.keys():
-                value = self.mappings[key][1](value, new_entry, self.index_page)
+            if key in self.meta_mappings.keys():
+                value = self.meta_mappings[key][1](value, new_entry, self.index_page)
                 print(f"Setting {key} to {value}")
                 setattr(
                     new_entry,
-                    self.mappings[key][0],
+                    self.meta_mappings[key][0],
                     value,
                 )
 

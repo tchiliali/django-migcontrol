@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "wagtail.contrib.styleguide",
     "wagtail_localize",
     "wagtail_localize.locales",
+    "wagtailmarkdown",
     "modelcluster",
     "taggit",
     "compressor",

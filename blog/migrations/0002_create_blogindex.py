@@ -27,6 +27,7 @@ def create_blogindex(apps, schema_editor):
             draft_title="Blog",
             slug='blog',
             content_type=blogindex_content_type,
+            translation_key=translation_key,
             locale=locale,
             path=home.path + "0001",
             depth=3,

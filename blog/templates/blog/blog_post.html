@@ -14,13 +14,19 @@
 
 {% if include_context == "index_page" %}
 <div class="blog-intro">
-    {{ blog.body|markdown|truncatewords_html:70 }}
+    {{ blog.body_markdown|markdown|truncatewords_html:70 }}
     <a href="{% pageurl blog %}">Read the rest of this entry &raquo;</a>
 </div>
 {% else %}
+{% if blog.body_markdown %}
 <div class="blog-body">
-    {{ blog.body|markdown }}
+    {{ blog.body_markdown|markdown }}
 </div>
+{% else %}
+<div class="blog-body">
+    {{ blog.body_richtext|richtext }}
+</div>
+{% endif %}
 {% endif %}
 
 
@@ -41,12 +47,5 @@
                 {% endfor %} |
         {% endif %}
 
-        <div id="comments" class="comments">
-        {% if COMMENTS_APP == 'django_comments_xtd' %}
-            {% include 'blog/blog_post_comments_xtd_link.html' with blog=blog %}
-        {% elif False %}
-            <a href="{% pageurl blog %}#disqus_thread">No Comments</a>
-        {% endif %}
-        </div>
     </div>
 </div>

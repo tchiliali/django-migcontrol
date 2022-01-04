@@ -63,6 +63,8 @@ def get_blog_context(context):
 
 
 class BlogIndexPage(Page):
+    template = "blog/index.html"
+
     @property
     def blogs(self):
         # Get list of blog pages that are descendants of this page
