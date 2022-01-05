@@ -201,6 +201,7 @@ class XML_parser(object):
         ret_dict["date"] = self.convert_date(
             item_dict["pubDate"], fallback=item_dict.get("{wp}post_date", "")
         )
+        ret_dict["status"] = item_dict["{wp}status"]
         ret_dict["meta"] = {}
         for (key, value) in item_dict["{wp}postmeta"]:
             if key.text:

@@ -1,6 +1,23 @@
 .migcontrol-contents-container
 {
-    p {
+    p, blockquote, h1, h2, h3, h4, h5, ul, ol {
         max-width: 700px;
     }
+    blockquote {
+        border-left: 3px solid #ccc;
+        padding-left: 10px;
+    }
+
+    h1, h2, h3, h4, h5 {
+        font-weight: bold;
+    }
+
+    .page-meta {
+        font-style: italic;
+    }
+
+    .pagination {
+        margin: 20px 0;
+    }
+
 }

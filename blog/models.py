@@ -107,7 +107,7 @@ class BlogIndexPage(Page):
 
         # Pagination
         page = request.GET.get("page")
-        page_size = 10
+        page_size = 12
         if hasattr(settings, "BLOG_PAGINATION_PER_PAGE"):
             page_size = settings.BLOG_PAGINATION_PER_PAGE
 

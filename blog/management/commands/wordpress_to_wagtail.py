@@ -12,9 +12,12 @@ from django.core.management.base import BaseCommand
 from django.core.management.base import CommandError
 from django.db import transaction
 from django.db.models import Q
+from django.template.defaultfilters import striptags
+from django.template.defaultfilters import truncatechars
 from django.utils import translation
 from django.utils.html import linebreaks
 from django.utils.text import slugify
+from PIL import Image as PILImage
 from wagtail.core.models import Locale
 from wagtail.images.models import Image
 
@@ -158,33 +161,34 @@ WP_POSTMETA_MAPPING = {
 
 
 def get_archive_page_mapping(
-    index, locale, post_id, title, date, slug, body, user, meta
+    index, locale, post_id, published, title, date, slug, body, excerpt, user, meta
 ):
     return {
         "title": title,
         "slug": slug,
-        "search_description": None,
-        # date=date,
-        # bbody_richtext=body,
+        "search_description": excerpt,
         "owner": user,
         "author": user,
         "description": body,
-        # body_markdown=html2text.html2text(body, bodywidth=0),
         "locale": locale,
+        "live": published,
     }
 
 
-def get_blog_page_mapping(index, locale, post_id, title, date, slug, body, user, meta):
+def get_blog_page_mapping(
+    index, locale, post_id, published, title, date, slug, body, excerpt, user, meta
+):
     return {
         "title": title,
         "slug": slug,
-        "search_description": "none",
+        "search_description": excerpt,
         "date": date,
         "body_richtext": body,
         "owner": user,
         # "author": user,
         "body_markdown": html2text.html2text(body, bodywidth=0),
         "locale": locale,
+        "live": published,
     }
 
 
@@ -276,6 +280,10 @@ class Command(BaseCommand):
             if prefix_url and prefix_url.endswith("/"):
                 prefix_url = prefix_url[:-1]
             url = "{}{}".format(prefix_url or "", url)
+        p_resized = re.compile(r"(.+)-\d+x\d+(\.[a-zA-Z]{3,4})")
+        matches = p_resized.findall(url)
+        if matches:
+            url = matches[0][0] + matches[0][1]
         return url
 
     def convert_html_entities(self, text, *args, **options):
@@ -287,13 +295,6 @@ class Command(BaseCommand):
         soup = BeautifulSoup(body, "html5lib")
         for img in soup.findAll("img"):
             old_url = img["src"]
-            if "width" in img:
-                width = img["width"]
-            if "height" in img:
-                height = img["height"]
-            else:
-                width = 100
-                height = 100
             __, file_ = os.path.split(img["src"])
             if not img["src"]:
                 continue  # Blank image
@@ -309,9 +310,12 @@ class Command(BaseCommand):
             ):
                 print("Unable to import " + img["src"])
                 continue
+            img_buffer = open(remote_image[0], "rb")
+            width, height = PILImage.open(img_buffer).size
+            img_buffer.seek(0)
             image = Image(title=file_, width=width, height=height)
             try:
-                image.file.save(file_, File(open(remote_image[0], "rb")))
+                image.file.save(file_, File(img_buffer))
                 image.save()
                 new_url = image.file.url
                 body = body.replace(old_url, new_url)
@@ -387,37 +391,50 @@ class Command(BaseCommand):
 
             body = post.get("content")
             if "<p>" not in body:
+                # Ensure that we have only double linebreaks
+                body = body.replace("\n\n", "¤¤¤¤¤¤")
+                body = body.replace("\n", "\n\n")
+                body = body.replace("¤¤¤¤¤¤", "\n\n")
                 body = linebreaks(body)
 
             # get image info from content and create image objects
             body = self.create_images_from_urls_in_content(body)
 
+            excerpt = post.get("excerpt") or truncatechars(striptags(body), 100)
+
             # author/user data
             author = post.get("author")
             user = self.create_user(author)
-            # categories = post.get("terms")
+            categories = post.get("terms").get("category")
+            for cat_dict in categories:
+                if "en" in cat_dict:
+                    raise Exception("English category")
             # format the date
             date = post.get("date")[:10]
 
             post_model_kwargs = {}
             restore_locale = translation.get_language()
             locale = None
+
+            published = post.get("status") == "publish"
+
             if self.locale:
                 if self.wagtail_locale:
                     locale = Locale.objects.get(language_code=self.locale)
                     post_model_kwargs["translation_key"] = uuid.uuid4()
                 else:
                     translation.activate(self.locale)
-            # post_model_kwargs["featured_image"] = post.get("featured_image")
 
             self.create_page(
                 self.index_page,
                 locale,
                 post_id,
+                published,
                 title,
                 date,
                 slug,
                 body,
+                excerpt,
                 user,
                 post.get("meta"),
                 **post_model_kwargs,
@@ -425,21 +442,52 @@ class Command(BaseCommand):
             translation.activate(restore_locale)
 
     def create_page(
-        self, index, locale, post_id, title, date, slug, body, user, meta, **kwargs
+        self,
+        index,
+        locale,
+        post_id,
+        published,
+        title,
+        date,
+        slug,
+        body,
+        excerpt,
+        user,
+        meta,
+        **kwargs,
     ):
 
         try:
             new_entry = self.PostModel.objects.get(slug=slug)
-            new_entry.title = title
-            new_entry.owner = user
-            new_entry.author = user
-            new_entry.wordpress_post_id = post_id
+            for k, v in self.mappings(
+                index,
+                locale,
+                post_id,
+                published,
+                title,
+                date,
+                slug,
+                body,
+                excerpt,
+                user,
+                meta,
+            ).items():
+                setattr(new_entry, k, v)
         except self.PostModel.DoesNotExist:
-
             new_entry = index.add_child(
                 instance=self.PostModel(
                     **self.mappings(
-                        index, locale, post_id, title, date, slug, body, user, meta
+                        index,
+                        locale,
+                        post_id,
+                        published,
+                        title,
+                        date,
+                        slug,
+                        body,
+                        excerpt,
+                        user,
+                        meta,
                     ),
                     **kwargs,
                 )
