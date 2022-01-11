@@ -27,6 +27,7 @@ from blog.models import BlogCategory
 from blog.models import BlogCategoryBlogPage
 from blog.models import BlogPageTag
 from blog.models import BlogTag
+from blog.models import WordpressMapping
 from blog.wp_xml_parser import XML_parser
 
 try:
@@ -231,6 +232,12 @@ class Command(BaseCommand):
             "--locale", type=str, default=None, help="Hard-code a locale"
         )
         parser.add_argument(
+            "--wp-uploads-url",
+            type=str,
+            default=None,
+            help="URL prefix of imported blog's media prefix, e.g.: https://blog.com/wp-content/uploads/",
+        )
+        parser.add_argument(
             "--create-other-locales",
             type=str,
             default=None,
@@ -247,6 +254,7 @@ class Command(BaseCommand):
         self.locale = options.get("locale", None)
         self.wagtail_locale = options.get("use_wagtail_locale", False)
         self.create_other_locales = options.get("create_other_locales", False)
+        self.wordpress_uploads_url = options["wp_uploads_url"]
         self.meta_mappings = WP_POSTMETA_MAPPING.get(
             "{}.{}".format(options["app"].lower(), options["post_model"].lower()), {}
         )
@@ -300,28 +308,34 @@ class Command(BaseCommand):
                 continue  # Blank image
             if img["src"].startswith("data:"):
                 continue  # Embedded image
+
             try:
-                remote_image = urllib.request.urlretrieve(self.prepare_url(img["src"]))
-            except (
-                urllib.error.HTTPError,
-                urllib.error.URLError,
-                UnicodeEncodeError,
-                ValueError,
-            ):
-                print("Unable to import " + img["src"])
-                continue
-            img_buffer = open(remote_image[0], "rb")
-            width, height = PILImage.open(img_buffer).size
-            img_buffer.seek(0)
-            image = Image(title=file_, width=width, height=height)
-            try:
+                cleaned_path = urllib.parse.urlparse(file_).netloc
+                image = WordpressMapping.objects.get(wp_url=cleaned_path or "404")
+                print(f"Found already imported image {cleaned_path}")
+            except WordpressMapping.DoesNotExist:
+                try:
+                    remote_image = urllib.request.urlretrieve(
+                        self.prepare_url(img["src"])
+                    )
+                except (
+                    urllib.error.HTTPError,
+                    urllib.error.URLError,
+                    UnicodeEncodeError,
+                    ValueError,
+                ):
+                    print("Unable to import " + img["src"])
+                    continue
+                img_buffer = open(remote_image[0], "rb")
+                width, height = PILImage.open(img_buffer).size
+                img_buffer.seek(0)
+                image = Image(title=file_, width=width, height=height)
                 image.file.save(file_, File(img_buffer))
                 image.save()
-                new_url = image.file.url
-                body = body.replace(old_url, new_url)
-                body = self.convert_html_entities(body)
-            except TypeError:
-                print("Unable to import image {}".format(remote_image[0]))
+
+            new_url = image.file.url
+            body = body.replace(old_url, new_url)
+            body = self.convert_html_entities(body)
         return body
 
     def create_user(self, author):

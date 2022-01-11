@@ -10,7 +10,7 @@ htmlparser = HTMLParser()
 
 
 class XML_parser(object):
-    def __init__(self, xml_path):
+    def __init__(self, xml_path, only_attachments=False):
         # TODO: yup, that's the whole file in memory
         xml_string = self.prep_xml(open(xml_path, "r").read())
         root = etree.XML(xml_string)
@@ -18,6 +18,7 @@ class XML_parser(object):
         self.authors = self.get_author_dict(self.chan)
         self.category_dict = self.get_category_dict(self.chan)
         self.tags_dict = self.get_tags_dict(self.chan)
+        self.only_attachments = only_attachments
 
     @staticmethod
     def get_category_dict(chan):
@@ -184,7 +185,15 @@ class XML_parser(object):
         if not item_dict.get("title"):
             return None
         # Skip attachments
-        if item_dict.get("{wp}post_type", None) == "attachment":
+        if (
+            self.only_attachments
+            and item_dict.get("{wp}post_type", None) != "attachment"
+        ):
+            return None
+        elif (
+            not self.only_attachments
+            and item_dict.get("{wp}post_type", None) == "attachment"
+        ):
             return None
         ret_dict = {}
         # slugify post title if no slug exists

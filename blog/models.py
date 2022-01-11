@@ -24,6 +24,7 @@ from wagtail.admin.edit_handlers import StreamFieldPanel
 from wagtail.core import blocks
 from wagtail.core.fields import StreamField
 from wagtail.core.models import Page
+from wagtail.documents import get_document_model_string
 from wagtail.images import get_image_model_string
 from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.edit_handlers import ImageChooserPanel
@@ -319,6 +320,50 @@ class BlogPage(Page):
         verbose_name_plural = _("Blog pages")
 
     parent_page_types = ["blog.BlogIndexPage"]
+
+
+class WordpressMapping(models.Model):
+    """
+    Mappings between Wordpress stuff and Wagtail stuff. Used to clean up
+    imported content containing for instance links, images or attachments.
+
+    Also useful for making a URL mapping from old wordpress URLs like
+    /wp-content/uploads/<...>
+    """
+
+    wp_url = models.CharField(
+        max_length=255,
+        unique=True,
+        blank=True,
+        null=True,
+    )
+    wp_post_id = models.PositiveSmallIntegerField(
+        unique=True,
+        blank=True,
+        null=True,
+    )
+    page = models.ForeignKey(
+        Page,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+    )
+    image = models.ForeignKey(
+        get_image_model_string(),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name=_("Wagtail image"),
+    )
+    document = models.ForeignKey(
+        get_document_model_string(),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name=_("Wagtail image"),
+    )
 
 
 BlogPage.content_panels = [
