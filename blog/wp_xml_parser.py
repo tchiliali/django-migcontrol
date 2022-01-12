@@ -207,6 +207,8 @@ class XML_parser(object):
         # fake user object
         ret_dict["author"] = self.authors[item_dict["{dc}creator"]]
         ret_dict["terms"] = item_dict.get("terms")
+        if isinstance(item_dict["pubDate"], list):
+            item_dict["pubDate"] = item_dict.get("{wp}post_date", "")
         ret_dict["date"] = self.convert_date(
             item_dict["pubDate"], fallback=item_dict.get("{wp}post_date", "")
         )

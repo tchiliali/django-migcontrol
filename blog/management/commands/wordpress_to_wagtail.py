@@ -404,6 +404,9 @@ class Command(BaseCommand):
                 description = self.convert_html_entities(description)
 
             body = post.get("content")
+            if isinstance(body, list):
+                print(f"Error: Empty content? {body}")
+                continue
             if "<p>" not in body:
                 # Ensure that we have only double linebreaks
                 body = body.replace("\n\n", "¤¤¤¤¤¤")
@@ -420,9 +423,10 @@ class Command(BaseCommand):
             author = post.get("author")
             user = self.create_user(author)
             categories = post.get("terms").get("category")
-            for cat_dict in categories:
-                if "en" in cat_dict:
-                    raise Exception("English category")
+            if categories:
+                for cat_dict in categories:
+                    if "en" in cat_dict:
+                        raise Exception("English category")
             # format the date
             date = post.get("date")[:10]
 
@@ -439,6 +443,7 @@ class Command(BaseCommand):
                 else:
                     translation.activate(self.locale)
 
+            print(f"Creating page '{title}'")
             self.create_page(
                 self.index_page,
                 locale,
