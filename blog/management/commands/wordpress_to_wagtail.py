@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import urllib.request
@@ -232,10 +233,10 @@ class Command(BaseCommand):
             "--locale", type=str, default=None, help="Hard-code a locale"
         )
         parser.add_argument(
-            "--wp-uploads-url",
+            "--wp-base-url",
             type=str,
             default=None,
-            help="URL prefix of imported blog's media prefix, e.g.: https://blog.com/wp-content/uploads/",
+            help="URL prefix of imported blog.: https://example-blog.com/ - this URL should have for instance wp-content nested in the first level.",
         )
         parser.add_argument(
             "--create-other-locales",
@@ -254,7 +255,7 @@ class Command(BaseCommand):
         self.locale = options.get("locale", None)
         self.wagtail_locale = options.get("use_wagtail_locale", False)
         self.create_other_locales = options.get("create_other_locales", False)
-        self.wordpress_uploads_url = options["wp_uploads_url"]
+        self.wordpress_base_url = options["wp_base_url"]
         self.meta_mappings = WP_POSTMETA_MAPPING.get(
             "{}.{}".format(options["app"].lower(), options["post_model"].lower()), {}
         )
@@ -460,7 +461,7 @@ class Command(BaseCommand):
             )
             translation.activate(restore_locale)
 
-    def create_page(
+    def create_page(  # noqa max-complexity: 16
         self,
         index,
         locale,
@@ -525,28 +526,62 @@ class Command(BaseCommand):
 
         new_entry.save()
 
+        header_image = None
         featured_image = kwargs.get("featured_image", None)
-
         if featured_image is not None:
-            title = featured_image["title"]
             source = featured_image["source"]
             __, file_ = os.path.split(source)
             source = source.replace("stage.swoon", "swoon")
             try:
                 remote_image = urllib.request.urlretrieve(self.prepare_url(source))
-                width = 640
-                height = 290
-                header_image = Image(title=title, width=width, height=height)
-                header_image.file.save(file_, File(open(remote_image[0], "rb")))
+                img_buffer = open(remote_image[0], "rb")
+                width, height = PILImage.open(img_buffer).size
+                img_buffer.seek(0)
+                header_image = Image(
+                    title=featured_image["title"], width=width, height=height
+                )
+                header_image.file.save(file_, File(open(img_buffer, "rb")))
                 header_image.save()
             except UnicodeEncodeError:
-                header_image = None
                 print("unable to set header image {}".format(source))
+
         else:
-            header_image = None
+            api_url = urllib.parse.urljoin(
+                self.wordpress_base_url, f"wp-json/wp/v2/posts/{post_id}?_embed"
+            )
+            try:
+                response = urllib.request.urlopen(api_url)
+                print(f"Success fetching {api_url}")
+                json_data = json.loads(response.read())
+                if json_data["featured_media"]:
+                    try:
+                        featured_image_post_id = json_data["featured_media"]
+                        header_image = WordpressMapping.objects.get(
+                            wp_post_id=featured_image_post_id
+                        ).image
+                    except WordpressMapping.DoesNotExist:
+                        print(
+                            f"Featured Image Post ID {featured_image_post_id} has not been imported"
+                        )
+                elif json_data["featured_img"]:
+                    print("fetching {}".format(json_data["featured_img"]))
+                    __, file_ = os.path.split(json_data["featured_img"])
+                    remote_image = urllib.request.urlretrieve(
+                        urllib.parse.urljoin(
+                            self.wordpress_base_url, json_data["featured_img"]
+                        ),
+                    )
+                    img_buffer = open(remote_image[0], "rb")
+                    width, height = PILImage.open(img_buffer).size
+                    img_buffer.seek(0)
+                    header_image = Image(
+                        title=f"Featured image for {title}", width=width, height=height
+                    )
+                    header_image.file.save(file_, File(img_buffer))
+                    header_image.save()
+
+            except urllib.error.HTTPError:
+                print(f"Error fetching {api_url}")
+
         new_entry.header_image = header_image
         new_entry.save()
-        # if categories:
-        #     self.create_categories_and_tags(new_entry, categories)
-        # if self.should_import_comments:
-        #     self.import_comments(post_id, slug)

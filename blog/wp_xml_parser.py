@@ -204,6 +204,7 @@ class XML_parser(object):
         ret_dict["title"] = item_dict["title"]
         ret_dict["description"] = item_dict["description"]
         ret_dict["content"] = item_dict["{content}encoded"]
+        ret_dict["attachment_url"] = item_dict.get("{wp}attachment_url")
         # fake user object
         ret_dict["author"] = self.authors[item_dict["{dc}creator"]]
         ret_dict["terms"] = item_dict.get("terms")

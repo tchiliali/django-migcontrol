@@ -66,24 +66,34 @@ class Command(BaseCommand):
     def import_to_wagtail(self, post):
         """create Image objects and transfer image files to media root"""
 
-        url_path = post["meta"]["_wp_attached_file"]
-        if not url_path:
-            print("WHAT")
+        if post["attachment_url"]:
+            full_url = post["attachment_url"]
+            url_path = urllib.parse.urlparse(full_url).path
+            extension = full_url.split(".")[-1].lower()
+        else:
+            url_path = post["attachment_url"] or post["meta"]["_wp_attached_file"]
+            if not url_path:
+                print("WHAT")
 
-        extension = url_path.split(".")[-1].lower()
+            extension = url_path.split(".")[-1].lower()
+            full_url = os.path.join(self.base_url, urllib.parse.quote(url_path))
 
         if models.WordpressMapping.objects.filter(wp_url=url_path).exists():
             # Already imported
             print(f"Already imported: {url_path}")
             return
+        if models.WordpressMapping.objects.filter(wp_post_id=post["ID"]).exists():
+            # Already imported
+            print(f"Already imported: {url_path}")
+            return
         if extension in ("jpg", "jpeg", "png", "gif"):
-            self.import_image(url_path, title=post["title"], wp_id=post["ID"])
+            self.import_image(full_url, title=post["title"], wp_id=post["ID"])
         else:
-            self.import_document(url_path, title=post["title"], wp_id=post["ID"])
+            self.import_document(full_url, title=post["title"], wp_id=post["ID"])
 
-    def import_image(self, url_path, title, wp_id):
-        full_url = os.path.join(self.base_url, urllib.parse.quote(url_path))
-        __, orig_filename = os.path.split(url_path)
+    def import_image(self, full_url, title, wp_id):
+        url_path = urllib.parse.urlparse(full_url).path
+        __, orig_filename = os.path.split(full_url)
         try:
             remote_image = urllib.request.urlretrieve(full_url)
         except (
@@ -105,7 +115,7 @@ class Command(BaseCommand):
             print("Unable to import image {}".format(remote_image[0]))
             raise
 
-        print(f"Successfully imported {url_path}")
+        print(f"Successfully imported {full_url}")
         models.WordpressMapping.objects.create(
             wp_url=url_path,
             image=image,
