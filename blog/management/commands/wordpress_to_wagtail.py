@@ -310,9 +310,10 @@ class Command(BaseCommand):
             if img["src"].startswith("data:"):
                 continue  # Embedded image
 
+            cleaned_path = urllib.parse.urlparse(self.prepare_url(img["src"])).path
             try:
-                cleaned_path = urllib.parse.urlparse(file_).netloc
-                image = WordpressMapping.objects.get(wp_url=cleaned_path or "404")
+
+                image = WordpressMapping.objects.get(wp_url=cleaned_path or "404").image
                 print(f"Found already imported image {cleaned_path}")
             except WordpressMapping.DoesNotExist:
                 try:
@@ -333,6 +334,9 @@ class Command(BaseCommand):
                 image = Image(title=file_, width=width, height=height)
                 image.file.save(file_, File(img_buffer))
                 image.save()
+                WordpressMapping.objects.create(
+                    wp_url=urllib.parse.urlparse(cleaned_path).path, image=image
+                )
 
             new_url = image.file.url
             body = body.replace(old_url, new_url)
