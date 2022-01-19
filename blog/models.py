@@ -337,7 +337,7 @@ class WordpressMapping(models.Model):
         blank=True,
         null=True,
     )
-    wp_post_id = models.PositiveSmallIntegerField(
+    wp_post_id = models.IntegerField(
         unique=True,
         blank=True,
         null=True,
