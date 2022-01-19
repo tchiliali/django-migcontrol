@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load wagtailmarkdown i18n %}
+{% load wagtailcore_tags static %}
+{% load wagtailimages_tags %}
+
+{% block content %}
+    {% if category %}
+    <h1>{{ category }}</h1>
+    {% elif tag %}
+    <h1>Posts tagged with '{{ tag }}'</h1>
+    {% else %}
+    <h1>{% trans "Latest updates" %}</h1>
+    {% endif %}
+
+    {% if blogs %}
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+
+        {% for blog in blogs %}
+          <div class="col">
+          <div class="card h-100">
+            {% if blog.header_image %}
+            {% image blog.header_image fill-500x300 as tmp_photo %}
+            <img class="card-img-top" src="{{ tmp_photo.url }}">
+            {% else %}
+            <img class="card-img-top" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" style="width: 500px; height: 200px;">
+            {% endif %}
+            <div class="card-body">
+              <h5 class="card-title">{{ blog.title }}</h5>
+              <p class="card-text"><small class="text-muted">{{ blog.date|date:"F jS, Y" }}</small></p>
+              <p class="card-text">{{ blog.body_markdown|markdown|striptags|truncatewords_html:30 }}</p>
+              <p class="card-text">
+                <a href="{% pageurl blog %}" class="btn btn-dark">{% trans "Read more" %}</a>
+              </p>
+            </div>
+          </div>
+          </div>
+        {% endfor %}
+
+    </div>
+
+    <div class="pagination btn-group">
+    {% if blogs.has_next %}
+      <a class="btn btn-outline-info" href="?page={{ blogs.next_page_number }}{% for key,value in request.GET.items %}{% ifnotequal key 'page' %}&amp;{{ key }}={{ value }}{% endifnotequal %}{% endfor %}">&larr; {% trans "Older" %}</a>
+    {% endif %}
+    {% if blogs.has_previous %}
+      <a class="btn btn-outline-info" href="?page={{ blogs.previous_page_number }}{% for key,value in request.GET.items %}{% ifnotequal key 'page' %}&amp;{{ key }}={{ value }}{% endifnotequal %}{% endfor %}">{% trans "Newer" %} &rarr;</a>
+    {% endif %}
+    </div>
+
+    {% else %}
+        <p>There are currently no blog posts</p>
+    {% endif %}
+{% endblock %}

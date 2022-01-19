@@ -10,13 +10,15 @@ htmlparser = HTMLParser()
 
 
 class XML_parser(object):
-    def __init__(self, xml_path):
+    def __init__(self, xml_path, only_attachments=False):
         # TODO: yup, that's the whole file in memory
         xml_string = self.prep_xml(open(xml_path, "r").read())
         root = etree.XML(xml_string)
         self.chan = root.find("channel")
+        self.authors = self.get_author_dict(self.chan)
         self.category_dict = self.get_category_dict(self.chan)
         self.tags_dict = self.get_tags_dict(self.chan)
+        self.only_attachments = only_attachments
 
     @staticmethod
     def get_category_dict(chan):
@@ -52,6 +54,19 @@ class XML_parser(object):
             tags_dict[slug]["name"] = name
             tags_dict[slug]["taxonomy"] = "post_tag"
         return tags_dict
+
+    def get_author_dict(self, chan):
+        authors = chan.findall("./{wp}author")
+        author_dict = {}
+        for author in authors:
+            username = author.find("./{wp}author_login").text
+            author_dict[username] = {
+                "username": username,
+                "email": author.find("./{wp}author_email").text,
+                "first_name": author.find("./{wp}author_first_name").text,
+                "last_name": author.find("./{wp}author_last_name").text,
+            }
+        return author_dict
 
     @staticmethod
     def remove_encoding(xml_string):
@@ -126,8 +141,13 @@ class XML_parser(object):
 
                 ret_dict["terms"]["post_tag"].append(tag_dict)
             # else use tagname:tag inner test
+            elif e.text and e.text.strip():
+                ret_dict[e.tag] = e.text.strip()
             else:
-                ret_dict[e.tag] = e.text
+                if e.tag in ret_dict.keys():
+                    ret_dict[e.tag].append(e.getchildren())
+                else:
+                    ret_dict[e.tag] = [e.getchildren()]
             # remove empty accumulators
         empty_keys = [k for k, v in ret_dict["terms"].items() if not v]
         for k in empty_keys:
@@ -165,27 +185,39 @@ class XML_parser(object):
         if not item_dict.get("title"):
             return None
         # Skip attachments
-        if item_dict.get("{wp}post_type", None) == "attachment":
+        if (
+            self.only_attachments
+            and item_dict.get("{wp}post_type", None) != "attachment"
+        ):
+            return None
+        elif (
+            not self.only_attachments
+            and item_dict.get("{wp}post_type", None) == "attachment"
+        ):
             return None
         ret_dict = {}
         # slugify post title if no slug exists
         ret_dict["slug"] = item_dict.get("{wp}post_name") or re.sub(
             item_dict["title"], " ", "-"
         )
-        ret_dict["ID"] = item_dict["guid"]
+        ret_dict["ID"] = item_dict["{wp}post_id"]
         ret_dict["title"] = item_dict["title"]
         ret_dict["description"] = item_dict["description"]
         ret_dict["content"] = item_dict["{content}encoded"]
+        ret_dict["attachment_url"] = item_dict.get("{wp}attachment_url")
         # fake user object
-        ret_dict["author"] = {
-            "username": item_dict["{dc}creator"],
-            "first_name": "",
-            "last_name": "",
-        }
+        ret_dict["author"] = self.authors[item_dict["{dc}creator"]]
         ret_dict["terms"] = item_dict.get("terms")
+        if isinstance(item_dict["pubDate"], list):
+            item_dict["pubDate"] = item_dict.get("{wp}post_date", "")
         ret_dict["date"] = self.convert_date(
             item_dict["pubDate"], fallback=item_dict.get("{wp}post_date", "")
         )
+        ret_dict["status"] = item_dict["{wp}status"]
+        ret_dict["meta"] = {}
+        for (key, value) in item_dict["{wp}postmeta"]:
+            if key.text:
+                ret_dict["meta"][key.text] = value.text
         return ret_dict
 
     def translate_wp_comment(self, e):
@@ -232,14 +264,12 @@ class XML_parser(object):
         items = self.chan.findall(
             "item"
         )  # (e for e in chan.getchildren() if e.tag=='item')
+
         # turn item element into a generic dict
         item_dict_gen = (self.item_dict(item) for item in items)
+
         # transform the generic dict to one with the expected JSON keys
-        all_the_data = [
-            self.translate_item(item)
-            for item in item_dict_gen
-            if self.translate_item(item)
-        ]
+        all_the_data = [self.translate_item(item) for item in item_dict_gen]
         return all_the_data
 
     def get_comments_data(self, slug):

@@ -12,7 +12,16 @@ class HomePage(Page):
     This is the landing page
     """
 
-    pass
+    body = StreamField(
+        [
+            ("heading", blocks.CharBlock(classname="full title")),
+            ("paragraph", blocks.RichTextBlock()),
+            ("image", ImageChooserBlock()),
+        ],
+        verbose_name="body",
+        blank=True,
+        help_text="The main contents of the page",
+    )
 
 
 class Article(Page):

@@ -1,25 +1,25 @@
 {% load wagtailcore_tags static %}
-{% load wagtailmarkdown %}
+{% load wagtailmarkdown i18n %}
 
-<a class="blog-post-link" href="{% pageurl blog %}">
-    <h2>{{ blog.title }}</h2>
-</a>
+<h1>{{ blog.title }}</h1>
 
 {% if blog.date %}
-    <div class="meta date">
+    <div class="page-meta">
         {{ blog.date|date:"F jS, Y" }}
-        {{ blog.author }}
+        {% if blog.author %}
+        {% trans "written by" %}: {{ blog.author|default:"" }}
+        {% endif %}
     </div>
 {% endif %}
 
-{% if include_context == "index_page" %}
-<div class="blog-intro">
-    {{ blog.body|markdown|truncatewords_html:70 }}
-    <a href="{% pageurl blog %}">Read the rest of this entry &raquo;</a>
+
+{% if blog.body_richtext %}
+<div class="blog-body">
+    {{ blog.body_richtext|richtext }}
 </div>
 {% else %}
 <div class="blog-body">
-    {{ blog.body|markdown }}
+    {{ blog.body_markdown|markdown }}
 </div>
 {% endif %}
 
@@ -41,12 +41,5 @@
                 {% endfor %} |
         {% endif %}
 
-        <div id="comments" class="comments">
-        {% if COMMENTS_APP == 'django_comments_xtd' %}
-            {% include 'blog/blog_post_comments_xtd_link.html' with blog=blog %}
-        {% elif False %}
-            <a href="{% pageurl blog %}#disqus_thread">No Comments</a>
-        {% endif %}
-        </div>
     </div>
 </div>

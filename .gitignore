@@ -6,7 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Django project artifacts
 static/CACHE
+media/
 
 # Distribution / packaging
 .Python

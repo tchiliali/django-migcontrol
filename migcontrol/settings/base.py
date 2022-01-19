@@ -23,31 +23,37 @@ BASE_DIR = os.path.dirname(PROJECT_DIR)
 # Application definition
 
 INSTALLED_APPS = [
-    "home",
-    "blog",
-    "search",
-    "wagtail.contrib.forms",
-    "wagtail.contrib.redirects",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.staticfiles",
+    "django.contrib.admin",
+    "django.contrib.humanize",
+    "django.contrib.sites",
+    "django.contrib.messages",
     "wagtail.embeds",
-    "wagtail.locales",
     "wagtail.sites",
+    "wagtail.search",
     "wagtail.users",
     "wagtail.snippets",
     "wagtail.documents",
     "wagtail.images",
-    "wagtail.search",
     "wagtail.admin",
     "wagtail.core",
-    "wagtail.contrib.simple_translation",
+    "wagtail.contrib.forms",
+    "wagtail.contrib.redirects",
+    "wagtail.contrib.sitemaps",
+    "wagtail.contrib.styleguide",
+    "wagtail_localize",
+    "wagtail_localize.locales",
+    "wagtailmarkdown",
     "modelcluster",
     "taggit",
-    "django.contrib.admin",
-    "django.contrib.auth",
-    "django.contrib.contenttypes",
-    "django.contrib.sessions",
-    "django.contrib.messages",
-    "django.contrib.staticfiles",
     "compressor",
+    "blog",
+    "home",
+    "search",
+    "archive",
 ]
 
 MIDDLEWARE = [
@@ -193,6 +199,8 @@ STATIC_URL = "/static/"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
+
+SITE_ID = 1
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
