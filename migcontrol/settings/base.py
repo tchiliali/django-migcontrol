@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "wagtail.contrib.styleguide",
     "wagtail_localize",
     "wagtail_localize.locales",
+    "sorl.thumbnail",
     "wagtailmarkdown",
     "modelcluster",
     "taggit",
@@ -199,6 +200,8 @@ STATIC_URL = "/static/"
 
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
+
+THUMBNAIL_DEBUG = True
 
 SITE_ID = 1
 
