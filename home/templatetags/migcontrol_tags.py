@@ -1,4 +1,7 @@
 from django import template
+from django.contrib.staticfiles import finders
+from django.core.files.storage import FileSystemStorage
+from sorl.thumbnail import get_thumbnail
 from wagtail.core.models import Page
 from wagtail.core.models import Site
 from wagtail.core.templatetags.wagtailcore_tags import pageurl
@@ -36,3 +39,25 @@ def slugurl_localized(context, slug):
     if page:
         # call pageurl() instead of page.relative_url() here so we get the ``accepts_kwarg`` logic
         return pageurl(context, page.localized)
+
+
+class StaticPath(str):
+    def __new__(cls, path: str, storage: FileSystemStorage):
+        obj = super().__new__(cls, path)
+        obj.storage = storage
+        return obj
+
+
+storage = FileSystemStorage(location="/")
+
+
+@register.simple_tag(takes_context=False)
+def get_static_thumbnail(file_: str, geometry, *args, **kwargs):
+    disk_path = finders.find(file_)
+    if disk_path:
+        return get_thumbnail(
+            StaticPath(disk_path, storage),
+            geometry,
+            *args,
+            **kwargs,
+        )

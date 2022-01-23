@@ -7,7 +7,7 @@ __pycache__/
 *.so
 
 # Django project artifacts
-static/CACHE
+static/
 media/
 
 # Distribution / packaging
