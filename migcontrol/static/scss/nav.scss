@@ -42,6 +42,13 @@ ul.lang-chooser {
     color: $dark;
 }
 
+.navbar .navbar-brand {
+    max-width: 300px;
+    img {
+        max-height: 50px;
+    }
+}
+
 .bg-dark {
     background-color: $migcontrol-dark-grey !important;
 }

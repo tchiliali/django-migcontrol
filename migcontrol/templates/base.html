@@ -48,6 +48,7 @@
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#metamenucollapse" aria-controls="metamenucollapse" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
+
       <div class="collapse navbar-collapse" id="metamenucollapse">
         <ul class="navbar-nav ms-auto">
         <li class="nav-item">
@@ -76,7 +77,8 @@
 
   <nav class="navbar navbar-expand-md navbar-dark bg-dark mb-4">
     <div class="container-fluid">
-      <a class="navbar-brand" href="/{{ LANGUAGE_CODE }}/">[logo]</a>
+
+	  <a class="navbar-brand" href="/{{ LANGUAGE_CODE }}/"><img src="{% static 'image/logo1.png' %}" alt="Migration Control Logo" class="img-fluid"></a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -102,8 +104,10 @@
           <input name="query" class="form-control me-2" type="search" placeholder="{% trans "Search" %}" aria-label="Search">
           <button class="btn btn-success" type="submit">{% trans "Search" %}</button>
         </form>
+
       </div>
     </div>
+
   </nav>
 
 
