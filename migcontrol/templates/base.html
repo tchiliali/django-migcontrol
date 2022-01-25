@@ -61,16 +61,16 @@
           <a class="nav-link" aria-current="page" target="_blank" href="https://www.facebook.com/migcontrol"><i class="fab fa-facebook"></i></a>
         </li>
           <li class="nav-item">
-            {% slugurl_localized 'donate' as donate_url %}
-            <a class="nav-link{% if page.url == donate_url %} active{% endif %}" href="{{ donate_url }}">{% trans "Donate" %}</a>
+             {% slugurl_localized 'contact' as contact_url %}
+            <a class="nav-link{% if page.url == contact_url %} active{% endif %}" href="{{ contact_url }}">{% trans "Contact" %}</a>
           </li>
           <li class="nav-item">
             {% slugurl_localized 'subscribe' as subscribe_url %}
             <a class="nav-link{% if page.url == subscribe_url %} active{% endif %}" href="{{ subscribe_url }}">{% trans "Subscribe" %}</a>
           </li>
           <li class="nav-item">
-            {% slugurl_localized 'contact' as contact_url %}
-            <a class="nav-link{% if page.url == contact_url %} active{% endif %}" href="{{ contact_url }}">{% trans "Contact" %}</a>
+			{% slugurl_localized 'donate' as donate_url %}
+            <a class="nav-link{% if page.url == donate_url %} active{% endif %}" href="{{ donate_url }}">{% trans "Donate" %}</a>
           </li>
         </ul>
       </div>
@@ -119,7 +119,7 @@
   </div>
 
   <div class="hero">
-    <div class="container mb-5">
+    <div class="col-xs-1 center-block">
       <h3>{% trans "Subscribe to our monthly review" %}</h3>
       <p>
         <a href="">{% trans "Show all issues" %} &gt;</a>
