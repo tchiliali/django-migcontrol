@@ -5,17 +5,16 @@
 
 <!DOCTYPE html>
 <html class="no-js" lang="en">
+
 <head>
-  <meta charset="utf-8" />
+
   <title>
     {% block title %}
         {% if page.seo_title %}{{ page.seo_title }}{% else %}{{ page.title }}{% endif %}
     {% endblock %}
     - Migration Control
   </title>
-  <meta name="description" content="" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  
   {% block extra_css %}
     {# Override this in templates to add extra stylesheets #}
   {% endblock %}
@@ -57,17 +56,17 @@
         <li class="nav-item">
           <a class="nav-link" aria-current="page" target="_blank" href="https://www.facebook.com/migcontrol"><i class="fab fa-facebook"></i></a>
         </li>
-          <li class="nav-item">
-            {% slugurl_localized 'donate' as donate_url %}
-            <a class="nav-link{% if page.url == donate_url %} active{% endif %}" href="{{ donate_url }}">{% trans "Donate" %}</a>
+		<li class="nav-item">
+            {% slugurl_localized 'contact' as contact_url %}
+            <a class="nav-link{% if page.url == contact_url %} active{% endif %}" href="{{ contact_url }}">{% trans "Contact" %}</a>
           </li>
           <li class="nav-item">
             {% slugurl_localized 'subscribe' as subscribe_url %}
             <a class="nav-link{% if page.url == subscribe_url %} active{% endif %}" href="{{ subscribe_url }}">{% trans "Subscribe" %}</a>
           </li>
-          <li class="nav-item">
-            {% slugurl_localized 'contact' as contact_url %}
-            <a class="nav-link{% if page.url == contact_url %} active{% endif %}" href="{{ contact_url }}">{% trans "Contact" %}</a>
+		   <li class="nav-item">
+            {% slugurl_localized 'donate' as donate_url %}
+            <a class="nav-link{% if page.url == donate_url %} active{% endif %}" href="{{ donate_url }}">{% trans "Donate" %}</a>
           </li>
         </ul>
       </div>
@@ -105,28 +104,28 @@
         </ul>
         <form class="search-form d-flex" action="{% url 'search' %}" method="GET">
           <input name="query" class="form-control me-2" type="search" placeholder="{% trans "Search" %}" aria-label="Search">
+		 <button type="button" class="btn btn-default">
+      <span class="glyphicon glyphicon-search"></span> Search
+    </button>
           <button class="btn btn-success" type="submit">{% trans "Search" %}</button>
+		  
         </form>
 
       </div>
     </div>
 
   </nav>
-
-
-
   <div class="container migcontrol-contents-container">
     {% block content %}{% endblock %}
   </div>
-
   <div class="hero">
-    <div class="container mb-5">
+    <div class="col-md-12 text-center">
       <h3>{% trans "Subscribe to our monthly review" %}</h3>
       <p>
         <a href="">{% trans "Show all issues" %} &gt;</a>
       </p>
       <div class="row">
-        <form class="col-md-4 offset-md-4">
+        <form class="col-md-4 offset-md-4 ">
           <div class="row g-2">
             <div class="col-md-8">
               <label for="staticEmail2" class="visually-hidden">{% trans "Email" %}</label>
@@ -141,7 +140,7 @@
     </div>
 
     <div class="container">
-      <h3>{% trans "Social links" %}</h3>
+      <h3>{% trans "Social media" %}</h3>
       <p class="h3">
         <a href="https://twitter.com/migcontrol" target="_blank"><i class="fab fa-twitter"></i></a>
         <a href="https://www.facebook.com/migcontrol/" target="_blank"><i class="fab fa-facebook"></i></a>
