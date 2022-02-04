@@ -21,3 +21,18 @@
     }
 
 }
+
+.container-image-background {
+  background-attachment: fixed;
+  background-clip: border-box;
+  background-color: transparent;
+  background-origin: padding-box;
+  background-position: 50% 50%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-sizing: border-box;
+  color: white;
+  display: table;
+  height: 400px;
+  width: 100%;
+}

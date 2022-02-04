@@ -1,6 +1,14 @@
 {% extends "base.html" %}
 {% load wagtailcore_tags %}
+{% load wagtailimages_tags %}
 
+{% block before_content %}
+  {% if self.header_image %}
+  {% image self.header_image width-1680 as tmp_photo %}
+    <div class="container-image-background" style="background-image: url('{{ tmp_photo.url }}');">
+    </div>
+  {% endif %}
+{% endblock %}
 
 {% block content %}
     {% include 'blog/blog_post.html' with blog=self %}
