@@ -1,26 +1,12 @@
 {% extends "base.html" %}
 {% load static %}
+{% load wagtailcore_tags %}
 
 {% block content %}
 
 <h1>{{ page.title }}</h1>
-<p>
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla vestibulum lectus et lacus ullamcorper euismod. Praesent elit erat, accumsan at tincidunt et, viverra a ante. Integer tincidunt pellentesque sapien, at consectetur lorem convallis non. Ut ac lacinia purus. Praesent tempus mi libero, pretium mollis neque consequat id. Donec gravida quam lectus, nec hendrerit ex dapibus vitae. Phasellus eu ipsum eu risus mollis accumsan. Morbi at tellus non turpis laoreet molestie. Mauris id massa in enim condimentum iaculis at in sapien. Nulla elementum est at mauris fermentum, facilisis sodales nisi molestie. Morbi posuere non magna ac luctus. Donec gravida dolor vitae nulla commodo tempor in nec lacus.
-</p>
-<p>
-Sed tincidunt tincidunt nulla ac blandit. Suspendisse augue ipsum, sodales in dolor ut, tincidunt venenatis orci. Donec semper, ex a ornare ultricies, est augue eleifend ligula, sed varius dolor dui id libero. Pellentesque sollicitudin posuere ipsum, ac sollicitudin nisi consectetur eget. Nullam vestibulum velit vel fringilla pellentesque. Aliquam pharetra tincidunt tristique. Maecenas nulla nunc, auctor non nisi dictum, iaculis vulputate diam. Vivamus id commodo urna. Integer vitae blandit dui, sed ultrices magna.
-</p>
-<p>
-Etiam eleifend lacus vitae malesuada faucibus. Nulla non venenatis elit, eu finibus purus. Aenean non odio lacinia, mattis turpis non, porttitor lectus. Sed suscipit imperdiet odio eu pharetra. Etiam sit amet mattis tortor, eget egestas arcu. Suspendisse lectus turpis, egestas sed risus vitae, dapibus pulvinar purus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Mauris a rhoncus lacus. Sed nec consequat lacus. Suspendisse non tincidunt dui, ut pulvinar sapien. Etiam felis mauris, tempor et leo pulvinar, pretium mollis tortor.
-</p>
-<p>
-Ut sit amet sem et mi dignissim tempor. Aenean ornare elementum auctor. Nunc in bibendum massa. Sed et volutpat felis. Mauris interdum enim non pellentesque scelerisque. Fusce velit ex, volutpat eget tellus tincidunt, rhoncus pellentesque nulla. Vestibulum faucibus, urna id volutpat accumsan, sem diam tincidunt magna, vel tristique nulla libero sed justo. Curabitur luctus, magna et dignissim tempor, metus lorem maximus orci, vitae ultrices ante lectus luctus tellus. In pulvinar eget mi eget convallis.
-</p>
-<p>
-Ut dignissim ultricies iaculis. Integer non tempus est. Ut erat nunc, posuere ac eleifend a, pulvinar eget nibh. Aliquam iaculis leo nec aliquam consequat. Etiam posuere nisi justo, sed laoreet leo faucibus ut. Phasellus erat metus, mollis at sollicitudin vel, consequat at justo. Integer non ante dolor.
-</p>
-{% load wagtailcore_tags %}
-{% for block in block_field %}
+
+{% for block in page.body %}
     {% include_block block %}
 {% endfor %}
 
