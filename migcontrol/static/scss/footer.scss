@@ -13,8 +13,20 @@ footer {
 .navbar-nav .nav-item .nav-link {
     color: red;
 }
-.navbar-nav .nav-item.active .nav-link,
-.navbar-nav .nav-item:hover .nav-link {
-    color: pink;
+.new-meows{
+   padding: 10px;
+   border: 1px solid grey;
+   margin : 10px;
+   width: 97%;
+   display: flex;
+   justify-content:space-between;
+
+ }
+ .new-meows button{
+    width: 80px;
+ }
+.new-meows input{
+    width: calc(100% - 80px)
+ }
 }
-}
+

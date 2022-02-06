@@ -7,6 +7,13 @@
 <html class="no-js" lang="en">
 
 <head>
+<style>
+<style>
+a.hover {
+  background-color: yellow;
+}
+</style>
+</style>
 
   <title>
     {% block title %}
@@ -47,6 +54,7 @@
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#metamenucollapse" aria-controls="metamenucollapse" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
+<nav class="navbar navbar-expand-md">
 
       <div class="collapse navbar-collapse" id="metamenucollapse">
         <ul class="navbar-nav ms-auto">
@@ -104,10 +112,9 @@
         </ul>
         <form class="search-form d-flex" action="{% url 'search' %}" method="GET">
           <input name="query" class="form-control me-2" type="search" placeholder="{% trans "Search" %}" aria-label="Search">
-		 <button type="button" class="btn btn-default">
-      <span class="glyphicon glyphicon-search"></span> Search
-    </button>
-          <button class="btn btn-success" type="submit">{% trans "Search" %}</button>
+		  
+		 <img src="">
+          <button class="btn btn-success" type="submit">{% trans "search" %}</button>
 		  
         </form>
 
@@ -125,7 +132,7 @@
         <a href="">{% trans "Show all issues" %} &gt;</a>
       </p>
       <div class="row">
-        <form class="col-md-4 offset-md-4 ">
+         <form class="col-md-5 offset-md-4">
           <div class="row g-2">
             <div class="col-md-8">
               <label for="staticEmail2" class="visually-hidden">{% trans "Email" %}</label>
