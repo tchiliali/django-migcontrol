@@ -402,6 +402,7 @@ class Command(BaseCommand):
             attributes=[
                 "href",
             ],
+            strip=True,
         )
 
     def create_blog_pages(  # noqa: max-complexity=12
