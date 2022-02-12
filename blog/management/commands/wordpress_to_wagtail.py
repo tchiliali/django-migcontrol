@@ -4,7 +4,9 @@ import re
 import urllib.request
 import uuid
 
+import bleach
 import html2text
+from bleach.sanitizer import ALLOWED_TAGS
 from bs4 import BeautifulSoup
 from django.apps import apps
 from django.contrib.auth import get_user_model
@@ -393,6 +395,16 @@ class Command(BaseCommand):
         for tag in tags_for_blog_entry:
             BlogPageTag.objects.get_or_create(tag=tag, content_object=page)[0]
 
+    def clean_body(self, body):
+        return bleach.clean(
+            body,
+            tags=ALLOWED_TAGS + ["p", "h1", "h2", "h3", "h4", "h5", "caption"],
+            attributes=[
+                "href",
+            ],
+            strip=True,
+        )
+
     def create_blog_pages(  # noqa: max-complexity=12
         self, posts, blog_index, *args, **options
     ):
@@ -418,6 +430,8 @@ class Command(BaseCommand):
                 body = body.replace("\n", "\n\n")
                 body = body.replace("¤¤¤¤¤¤", "\n\n")
                 body = linebreaks(body)
+
+            body = self.clean_body(body)
 
             # get image info from content and create image objects
             body = self.create_images_from_urls_in_content(body)
