@@ -31,6 +31,14 @@ To get started, run the following commands:
 Once the local webserver is running, you can access the website on
 ``http://localhost:8000``.
 
+In order to have an administrator (superuser) account, run the following command:
+
+.. code-block:: console
+
+    # Create a superuser account
+    python manage.py createsuperuser
+
+
 If you want to make usage of virtualenvs smoother, consider installing
 `virtualenv-wrapper <https://virtualenvwrapper.readthedocs.io/en/latest/>`__
 
