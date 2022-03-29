@@ -39,7 +39,7 @@ COMMENTS_APP = getattr(settings, "COMMENTS_APP", None)
 
 
 def get_blog_context(context):
-    """ Get context data useful on all blog related pages """
+    """Get context data useful on all blog related pages"""
     context["authors"] = (
         get_user_model()
         .objects.filter(
@@ -210,7 +210,7 @@ class BlogTag(Tag):
 
 
 def limit_author_choices():
-    """ Limit choices in blog author field based on config settings """
+    """Limit choices in blog author field based on config settings"""
     LIMIT_AUTHOR_CHOICES = getattr(settings, "BLOG_LIMIT_AUTHOR_CHOICES_GROUP", None)
     if LIMIT_AUTHOR_CHOICES:
         if isinstance(LIMIT_AUTHOR_CHOICES, str):
