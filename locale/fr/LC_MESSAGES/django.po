@@ -20,7 +20,7 @@ msgstr ""
 
 #: archive/models.py:44
 msgid "location name"
-msgstr ""
+msgstr "nom du lieu"
 
 #: archive/models.py:45
 msgid "Typically a city name or region"
@@ -28,39 +28,39 @@ msgstr ""
 
 #: archive/models.py:49 archive/models.py:90
 msgid "country"
-msgstr ""
+msgstr "pays"
 
 #: archive/models.py:83
 msgid "organization type"
-msgstr ""
+msgstr "type d'organisation"
 
 #: archive/models.py:105 blog/models.py:268
-msgid "Author"
+msgid "Auteur"
 msgstr ""
 
 #: archive/templates/archive/archive_page.html:11
 msgid "Organization type"
-msgstr ""
+msgstr "type d'organisation"
 
 #: archive/templates/archive/archive_page.html:12
 msgid "Countries"
-msgstr ""
+msgstr "Pays"
 
 #: archive/templates/archive/archive_page.html:13
 msgid "Location"
-msgstr ""
+msgstr "Localisation"
 
 #: archive/templates/archive/archive_page.html:19
 msgid "Back to index"
-msgstr ""
+msgstr "Retour à l'index"
 
 #: blog/models.py:134
 msgid "Blog index"
-msgstr ""
+msgstr "Index des blogs"
 
 #: blog/models.py:141
 msgid "Category Name"
-msgstr ""
+msgstr "Nom de la catégorie"
 
 #: blog/models.py:149
 msgid ""
@@ -71,7 +71,7 @@ msgstr ""
 
 #: blog/models.py:159
 msgid "Blog Category"
-msgstr ""
+msgstr "Catégorie Blog"
 
 #: blog/models.py:160
 msgid "Blog Categories"
@@ -79,7 +79,7 @@ msgstr ""
 
 #: blog/models.py:193
 msgid "Category"
-msgstr ""
+msgstr "Catégories de blogs"
 
 #: blog/models.py:230
 msgid "body (HTML)"
@@ -91,7 +91,7 @@ msgstr ""
 
 #: blog/models.py:248
 msgid "Post date"
-msgstr ""
+msgstr "Date de publication"
 
 #: blog/models.py:251
 msgid ""
@@ -101,96 +101,96 @@ msgstr ""
 
 #: blog/models.py:261
 msgid "Header image"
-msgstr ""
+msgstr "Image d'en-tête"
 
 #: blog/models.py:319
 msgid "Blog page"
-msgstr ""
+msgstr "Page du blog"
 
 #: blog/models.py:320
 msgid "Blog pages"
-msgstr ""
+msgstr "Pages du blog"
 
 #: blog/models.py:357 blog/models.py:365
 msgid "Wagtail image"
-msgstr ""
+msgstr "Image de Wagtail"
 
 #: blog/models.py:374
 msgid "Categories"
-msgstr ""
+msgstr "Catégories"
 
 #: blog/templates/blog/blog_post.html:10
 msgid "written by"
-msgstr ""
+msgstr "écrit par"
 
 #: blog/templates/blog/index.html:12
 msgid "Latest updates"
-msgstr ""
+msgstr "Dernières mises à jour"
 
 #: blog/templates/blog/index.html:33
 msgid "Read more"
-msgstr ""
+msgstr "Lire plus"
 
 #: blog/templates/blog/index.html:44
 msgid "Older"
-msgstr ""
+msgstr "Plus vieux"
 
 #: blog/templates/blog/index.html:47
 msgid "Newer"
-msgstr ""
+msgstr "Plus récent"
 
 #: migcontrol/templates/base.html:62
 msgid "Donate"
-msgstr ""
+msgstr "Faire un don"
 
 #: migcontrol/templates/base.html:66 migcontrol/templates/base.html:137
 msgid "Subscribe"
-msgstr ""
+msgstr "S'abonner à"
 
 #: migcontrol/templates/base.html:70 migcontrol/templates/base.html:174
 msgid "Contact"
-msgstr ""
+msgstr "Contact"
 
 #: migcontrol/templates/base.html:92
 msgid "About"
-msgstr ""
+msgstr "À propos de"
 
 #: migcontrol/templates/base.html:95
 msgid "Wiki"
-msgstr ""
+msgstr "Wiki"
 
 #: migcontrol/templates/base.html:99
 msgid "Blog"
-msgstr ""
+msgstr "Blog"
 
 #: migcontrol/templates/base.html:103
 msgid "Archive"
-msgstr ""
+msgstr "Archives"
 
 #: migcontrol/templates/base.html:107 migcontrol/templates/base.html:108
 msgid "Search"
-msgstr ""
+msgstr "Recherche"
 
 #: migcontrol/templates/base.html:125
 msgid "Subscribe to our monthly review"
-msgstr ""
+msgstr "Subscribe to our press review"
 
 #: migcontrol/templates/base.html:127
 msgid "Show all issues"
-msgstr ""
+msgstr "Montrer tous les numéros"
 
 #: migcontrol/templates/base.html:133
 msgid "Email"
-msgstr ""
+msgstr "e-mail"
 
 #: migcontrol/templates/base.html:145
 msgid "Social Media"
-msgstr ""
+msgstr "Médias sociaux"
 
 #: migcontrol/templates/base.html:166
 msgid "Imprint"
-msgstr ""
+msgstr "Impression"
 
 #: migcontrol/templates/base.html:170
 msgid "Data protection"
-msgstr ""
+msgstr "Protection des données"
