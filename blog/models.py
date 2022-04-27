@@ -243,6 +243,12 @@ class BlogPage(Page):
         help_text="Avoiding this at first because data might be hard to migrate?",
     )
 
+    add_toc = models.BooleanField(
+        default=False,
+        verbose_name=_("Display TOC (Table Of Contents)"),
+        help_text=_("A TOC can be auto-generated"),
+    )
+
     tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
     date = models.DateField(
         _("Post date"),
