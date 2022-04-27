@@ -182,6 +182,15 @@ def get_archive_page_mapping(
 def get_blog_page_mapping(
     index, locale, post_id, published, title, date, slug, body, excerpt, user, meta
 ):
+
+    # Clean up UPPERCASE h1 and h2s in blog posts
+    body_soup = BeautifulSoup(body, "html5lib")
+    uppercase_re = re.compile(r"^[^a-z]+$")
+    for header in body_soup.findAll(["h1", "h2", "h3", "h4", "h5"]):
+        if uppercase_re.match(header.text):
+            if header.string:
+                header.string.replace_with(header.text.title())
+    body = str(body_soup)
     return {
         "title": title,
         "slug": slug,
