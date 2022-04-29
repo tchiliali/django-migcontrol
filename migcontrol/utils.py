@@ -21,7 +21,7 @@ def toc(lst):
     item0 = lst[0]
 
     if len(lst) == 1:
-        return [(item0, [])]
+        return [(item0.text, [])]
 
     children = toc(list(until_next_outer(lst[1:], item0.name)))
     siblings = [(item0.text, children)]
