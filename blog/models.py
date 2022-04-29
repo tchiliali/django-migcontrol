@@ -313,7 +313,7 @@ class BlogPage(Page):
         elif self.body_markdown:
             body = markdown(self.body_markdown)
         else:
-            body = "".join([f.value for f in self.body_mixed])
+            body = "".join([str(f.value) for f in self.body_mixed])
 
         # Now let's add some id=... attributes to all h{1,2,3,4,5}
         soup = BeautifulSoup(body, "html5lib")
