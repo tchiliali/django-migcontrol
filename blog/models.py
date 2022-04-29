@@ -336,8 +336,12 @@ class BlogPage(Page):
         """
         html = self.get_body()
         soup = BeautifulSoup(html)
+        # Need to build this in a list, otherwise evaluating whether it is
+        # empty or not causes problems in templates
+        return_list = []
         for element, children in toc(soup.find_all(["h1", "h2", "h3", "h4", "h5"])):
-            yield element, children
+            return_list.append((element, children))
+        return return_list
 
     def save_revision(self, *args, **kwargs):
         if not self.author:
