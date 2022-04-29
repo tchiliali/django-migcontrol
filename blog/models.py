@@ -1,5 +1,6 @@
 import datetime
 
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -24,6 +25,7 @@ from wagtail.admin.edit_handlers import StreamFieldPanel
 from wagtail.core import blocks
 from wagtail.core.fields import StreamField
 from wagtail.core.models import Page
+from wagtail.core.templatetags.wagtailcore_tags import richtext
 from wagtail.documents import get_document_model_string
 from wagtail.images import get_image_model_string
 from wagtail.images.blocks import ImageChooserBlock
@@ -33,6 +35,9 @@ from wagtail.snippets.models import register_snippet
 from wagtailmarkdown.blocks import MarkdownBlock
 from wagtailmarkdown.edit_handlers import MarkdownPanel
 from wagtailmarkdown.fields import MarkdownField
+from wagtailmarkdown.templatetags.wagtailmarkdown import markdown
+
+from migcontrol.utils import toc
 
 
 COMMENTS_APP = getattr(settings, "COMMENTS_APP", None)
@@ -243,6 +248,12 @@ class BlogPage(Page):
         help_text="Avoiding this at first because data might be hard to migrate?",
     )
 
+    add_toc = models.BooleanField(
+        default=False,
+        verbose_name=_("Display TOC (Table Of Contents)"),
+        help_text=_("A TOC can be auto-generated"),
+    )
+
     tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
     date = models.DateField(
         _("Post date"),
@@ -295,6 +306,38 @@ class BlogPage(Page):
         FieldPanel("date"),
         FieldPanel("author"),
     ]
+
+    def get_body(self):
+        if self.body_richtext:
+            body = richtext(self.body_richtext)
+        elif self.body_markdown:
+            body = markdown(self.body_markdown)
+        else:
+            body = "".join([f.value for f in self.body_mixed])
+
+        # Now let's add some id=... attributes to all h{1,2,3,4,5}
+        soup = BeautifulSoup(body, "html5lib")
+
+        # Beautiful soup unfortunately adds some noise to the structure, so we
+        # remove this again - see:
+        # https://stackoverflow.com/questions/21452823/beautifulsoup-how-should-i-obtain-the-body-contents
+        for attr in ["head", "html", "body"]:
+            if hasattr(soup, attr):
+                getattr(soup, attr).unwrap()
+
+        for element in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
+            element["id"] = slugify(element.text)
+
+        return str(soup)
+
+    def get_toc(self):
+        """
+        [(name, [*children])]
+        """
+        html = self.get_body()
+        soup = BeautifulSoup(html)
+        for element, children in toc(soup.find_all(["h1", "h2", "h3", "h4", "h5"])):
+            yield element, children
 
     def save_revision(self, *args, **kwargs):
         if not self.author:
