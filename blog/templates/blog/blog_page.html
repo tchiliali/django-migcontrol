@@ -18,7 +18,7 @@
 {% block sidebar %}
 {% with self.get_toc as toc %}
 {% if toc %}
-<nav id="contents-toc" class="navbar navbar-light bg-light flex-column align-items-stretch p-3 sticky-md-top">
+<nav id="contents-toc" class="navbar navbar-light bg-light flex-column align-items-stretch p-3 sticky-md-top my-3">
   <a class="navbar-brand" href="#">Table of contents</a>
   <nav class="nav nav-pills flex-column">
   {% for section, children in toc %}
