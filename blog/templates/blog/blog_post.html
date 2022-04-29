@@ -13,15 +13,9 @@
 {% endif %}
 
 
-{% if blog.body_richtext %}
 <div class="blog-body">
-    {{ blog.body_richtext|richtext }}
+    {{ blog.get_body|safe }}
 </div>
-{% else %}
-<div class="blog-body">
-    {{ blog.body_markdown|markdown }}
-</div>
-{% endif %}
 
 
 <div class="blog-post-meta">

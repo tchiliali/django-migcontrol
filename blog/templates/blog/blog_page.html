@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load wagtailcore_tags %}
 {% load wagtailimages_tags %}
+{% load static %}
 
 {% block before_content %}
   {% if self.header_image %}
@@ -12,4 +13,23 @@
 
 {% block content %}
     {% include 'blog/blog_post.html' with blog=self %}
+{% endblock %}
+
+{% block sidebar %}
+{% with self.get_toc as toc %}
+{% if toc %}
+<nav id="contents-toc" class="navbar navbar-light bg-light flex-column align-items-stretch p-3 sticky-md-top my-3">
+  <a class="navbar-brand" href="#">Table of contents</a>
+  <nav class="nav nav-pills flex-column">
+  {% for section, children in toc %}
+      {% include "migcontrol/includes/toc_section.html" with section=section children=children %}
+  {% endfor %}
+  </nav>
+</nav>
+{% endif %}
+{% endwith %}
+{% block extra_js %}
+  {{ block.super }}
+  <script type="text/javascript" src="{% static 'js/toc.js' %}"></script>
+{% endblock %}
 {% endblock %}
