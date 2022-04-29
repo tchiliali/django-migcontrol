@@ -1,6 +1,6 @@
   <a class="nav-link" href="#{{ section|slugify }}">{{ section }}</a>
   {% if children %}
-  <nav class="nav nav-pills flex-column ms-3">
+  <nav class="nav nav-pills flex-column ms-3 my-1">
     {% for sub_section, sub_children in children %}
       {% include "migcontrol/includes/toc_section.html" with section=sub_section children=sub_children %}
     {% endfor %}
