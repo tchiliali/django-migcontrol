@@ -326,7 +326,7 @@ class BlogPage(Page):
                 getattr(soup, attr).unwrap()
 
         for element in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
-            element["id"] = slugify(element.text)
+            element["id"] = "header-" + slugify(element.text)
 
         return str(soup)
 
