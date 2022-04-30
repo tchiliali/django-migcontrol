@@ -289,7 +289,7 @@ class BlogPage(Page):
         BlogCategory, through=BlogCategoryBlogPage, blank=True
     )
 
-    settings_panels = [
+    settings_panels = Page.settings_panels + [
         MultiFieldPanel(
             [
                 FieldRowPanel(
