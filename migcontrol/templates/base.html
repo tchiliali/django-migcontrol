@@ -119,8 +119,15 @@
 
 
   {% block before_content %}{% endblock %}
-  <div class="container migcontrol-contents-container">
+  <div class="container">
+  <div class="row">
+    <div class="col-md-8 migcontrol-contents-container">
     {% block content %}{% endblock %}
+    </div>
+    <div class="col-md-4 migcontrol-contents-sidebar">
+    {% block sidebar %}{% endblock %}
+    </div>
+  </div>
   </div>
 
   <div class="hero">
