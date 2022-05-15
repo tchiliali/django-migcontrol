@@ -23,20 +23,14 @@
   {% compress css %}
     <link rel="stylesheet" type="text/x-scss" href="{% static "scss/main.scss" %}">
   {% endcompress %}
-
 </head>
 <style>
-
 #form{
-	
 	margin-left:32%;
-
 }
-
 </style>
 <body>
   {% wagtailuserbar %}
-
   <nav class="navbar navbar-light navbar-expand-md mb-0 migcontrol-navbar-top">
     <div class="container-fluid">
       <ul class="lang-chooser">
@@ -52,11 +46,9 @@
           {% endlanguage %}
       {% endfor %}
       </ul>
-
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#metamenucollapse" aria-controls="metamenucollapse" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-
       <div class="collapse navbar-collapse" id="metamenucollapse">
         <ul class="navbar-nav ms-auto">
         <li class="nav-item">
@@ -81,11 +73,8 @@
       </div>
     </div>
   </nav>
-
-
   <nav class="navbar navbar-expand-md navbar-dark bg-dark migcontrol-navbar-main">
     <div class="container-fluid">
-
 	  <a class="navbar-brand" href="/{{ LANGUAGE_CODE }}/">
 	    {% get_static_thumbnail "images/logo.png" "300x100" format="PNG" as im %}
 	    <img src="{{ im.url }}" alt="Migration Control Logo" class="img-fluid">
@@ -113,19 +102,11 @@
         </ul>
         <form class="search-form d-flex" action="{% url 'search' %}" method="GET">
           <input name="query" class="form-control me-2" type="search" placeholder="{% trans "Search" %}" aria-label="Search">
-
-
          <button class="btn btn-success" type="submit"><span class="fa fa-search"></span></button>
-
         </form>
-
       </div>
     </div>
-
   </nav>
-
-
-
   {% block before_content %}{% endblock %}
   <div class="container">
   <div class="row">
@@ -137,7 +118,6 @@
     </div>
   </div>
   </div>
-
   <div class="hero">
     <div class="container mb-5">
       <h3>{% trans "Subscribe to our monthly review" %}</h3>
@@ -158,24 +138,20 @@
         </form>
       </div>
     </div>
-
     <div class="container">
       <h3>{% trans "Social Media" %}</h3>
       <p class="h3">
         <a href="https://twitter.com/migcontrol" target="_blank"><i class="fab fa-twitter"></i></a>
         <a href="https://www.facebook.com/migcontrol/" target="_blank"><i class="fab fa-facebook"></i></a>
       </p>
-
     </div>
   </div>
-
 <footer>
   <nav class="navbar navbar-expand-md navbar-right navbar-dark bg-dark">
     <div class="container-fluid">
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#footernavbar" aria-controls="footernavbar" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-
       <span class="navbar-text">Copyright {% now "Y" %} Migration Control</span>
       <div class="collapse navbar-collapse" id="footernavbar">
       <ul class="navbar-nav ms-auto">
@@ -193,16 +169,12 @@
         </li>
       </ul>
       </div>
-
-
     </div>
   </nav>
 </footer>
-
     {# Global javascript #}
     <script type="text/javascript" src="{% static 'js/migcontrol.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/bootstrap.min.js' %}"></script>
-
     {% block extra_js %}
         {# Override this in templates to add extra javascript #}
     {% endblock %}
