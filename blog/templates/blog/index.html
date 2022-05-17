@@ -8,13 +8,11 @@
     <h1>{{ category }}</h1>
     {% elif tag %}
     <h1>Posts tagged with '{{ tag }}'</h1>
-    {% else %}
-    <h1>{% trans "Latest updates" %}</h1>
     {% endif %}
 
     {% if blogs %}
 
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="row row-cols-1 row-cols-md-3 g-4 mt-4">
 
         {% for blog in blogs %}
           <div class="col">
