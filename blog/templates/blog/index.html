@@ -30,7 +30,7 @@
               <p class="card-text"><small class="text-muted">{{ blog.date|date:"F jS, Y" }}</small></p>
               <p class="card-text">{{ blog.body_markdown|markdown|striptags|truncatewords_html:30 }}</p>
               <p class="card-text">
-                <a href="{% pageurl blog %}" class="btn btn-dark">{% trans "Read more" %}</a>
+                <a href="{% pageurl blog %}" class="btn btn-primary">{% trans "Read more" %}</a>
               </p>
             </div>
           </div>
