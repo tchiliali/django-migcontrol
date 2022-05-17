@@ -28,7 +28,7 @@
             {% image blog.header_image fill-500x300 as tmp_photo %}
             <img class="card-img-top" src="{{ tmp_photo.url }}">
             {% else %}
-            <img class="card-img-top" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" style="width: 500px; height: 200px;">
+            <img class="card-img-top" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
             {% endif %}
             <div class="card-body">
               <h5 class="card-title">{{ blog.title }}</h5>
