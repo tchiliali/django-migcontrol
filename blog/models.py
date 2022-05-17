@@ -441,4 +441,4 @@ def import_fontawesome_stylesheet():
     output = ""
     for x in compressor.hunks():
         output += x
-    return format_html(output)
+    return format_html(compressor.output(forced=True))
