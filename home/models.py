@@ -24,18 +24,10 @@ class HomePage(Page):
     )
 
 
-class Article(Page):
+class ArticleBase(models.Model):
     """
-    We are using this model as a default article page. This covers the following
-    page types:
-
-    * Landing page
-    * About page
-    * Contact page
-    * Donate page
-    * Subscribe page
-    * Data protection page
-    * Imprint page
+    This mixin can be reused in Page models of other applications that need
+    the same structure.
     """
 
     body = StreamField(
@@ -52,3 +44,23 @@ class Article(Page):
         FieldPanel("title", classname="full title"),
         StreamFieldPanel("body"),
     ]
+
+    class Meta:
+        abstract = True
+
+
+class Article(ArticleBase, Page):
+    """
+    We are using this model as a default article page. This covers the following
+    page types:
+
+    * Landing page
+    * About page
+    * Contact page
+    * Donate page
+    * Subscribe page
+    * Data protection page
+    * Imprint page
+    """
+
+    pass

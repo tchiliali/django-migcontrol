@@ -40,6 +40,7 @@ from wagtailmarkdown.edit_handlers import MarkdownPanel
 from wagtailmarkdown.fields import MarkdownField
 from wagtailmarkdown.templatetags.wagtailmarkdown import markdown
 
+from home.models import ArticleBase
 from migcontrol.utils import toc
 
 
@@ -71,7 +72,7 @@ def get_blog_context(context):
     return context
 
 
-class BlogIndexPage(Page):
+class BlogIndexPage(ArticleBase, Page):
     template = "blog/index.html"
 
     @property
