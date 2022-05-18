@@ -1,6 +1,7 @@
 import datetime
 
 from bs4 import BeautifulSoup
+from compressor.css import CssCompressor
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -12,6 +13,7 @@ from django.db.models import Count
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import slugify
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 from modelcluster.fields import ParentalKey
 from modelcluster.tags import ClusterTaggableManager
@@ -23,6 +25,7 @@ from wagtail.admin.edit_handlers import InlinePanel
 from wagtail.admin.edit_handlers import MultiFieldPanel
 from wagtail.admin.edit_handlers import StreamFieldPanel
 from wagtail.core import blocks
+from wagtail.core import hooks
 from wagtail.core.fields import StreamField
 from wagtail.core.models import Page
 from wagtail.core.templatetags.wagtailcore_tags import richtext
@@ -37,6 +40,7 @@ from wagtailmarkdown.edit_handlers import MarkdownPanel
 from wagtailmarkdown.fields import MarkdownField
 from wagtailmarkdown.templatetags.wagtailmarkdown import markdown
 
+from home.models import ArticleBase
 from migcontrol.utils import toc
 
 
@@ -68,7 +72,7 @@ def get_blog_context(context):
     return context
 
 
-class BlogIndexPage(Page):
+class BlogIndexPage(ArticleBase, Page):
     template = "blog/index.html"
 
     @property
@@ -289,7 +293,7 @@ class BlogPage(Page):
         BlogCategory, through=BlogCategoryBlogPage, blank=True
     )
 
-    settings_panels = [
+    settings_panels = Page.settings_panels + [
         MultiFieldPanel(
             [
                 FieldRowPanel(
@@ -326,7 +330,7 @@ class BlogPage(Page):
                 getattr(soup, attr).unwrap()
 
         for element in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
-            element["id"] = slugify(element.text)
+            element["id"] = "header-" + slugify(element.text)
 
         return str(soup)
 
@@ -427,3 +431,15 @@ BlogPage.content_panels = [
     FieldPanel("body_richtext", classname="collapsed"),
     StreamFieldPanel("body_mixed"),
 ]
+
+
+@hooks.register("insert_global_admin_css")
+def import_fontawesome_stylesheet():
+    elem = '<link rel="stylesheet" type="text/x-scss" href="{}scss/fontawesome.scss">'.format(
+        settings.STATIC_URL
+    )
+    compressor = CssCompressor("css", content=elem)
+    output = ""
+    for x in compressor.hunks():
+        output += x
+    return format_html(compressor.output(forced=True))

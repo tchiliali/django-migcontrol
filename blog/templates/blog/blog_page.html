@@ -28,8 +28,9 @@
 </nav>
 {% endif %}
 {% endwith %}
+{% endblock %}
+
 {% block extra_js %}
   {{ block.super }}
   <script type="text/javascript" src="{% static 'js/toc.js' %}"></script>
-{% endblock %}
 {% endblock %}
