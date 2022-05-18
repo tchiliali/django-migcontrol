@@ -12,9 +12,9 @@
 
 {% block content %}
     {% if category %}
-    <h1>{{ category }}</h1>
+    <h1 class="migcontrol-page-title">{{ category }}</h1>
     {% elif tag %}
-    <h1>Posts tagged with '{{ tag }}'</h1>
+    <h1 class="migcontrol-page-title">Posts tagged with '{{ tag }}'</h1>
     {% endif %}
 
     {% if blogs %}
