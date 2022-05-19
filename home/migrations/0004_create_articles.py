@@ -6,13 +6,14 @@ from django.db import migrations
 # slug: title, translation_key
 homepage_translation_key = uuid.uuid4()
 
+# {slug: (title, uuid, show_in_menus)}
 pages = {
-    "about": ("About", uuid.uuid4()),
-    "contact": ("Contact", uuid.uuid4()),
-    "donate": ("Donate", uuid.uuid4()),
-    "subscribe": ("Subscribe", uuid.uuid4()),
-    "imprint": ("Imprint", uuid.uuid4()),
-    "data-protection": ("Data protection", uuid.uuid4()),
+    "about": ("About", uuid.uuid4(), True),
+    "contact": ("Contact", uuid.uuid4(), False),
+    "donate": ("Donate", uuid.uuid4(), False),
+    "subscribe": ("Subscribe", uuid.uuid4(), False),
+    "imprint": ("Imprint", uuid.uuid4(), False),
+    "data-protection": ("Data protection", uuid.uuid4(), False),
 }
 
 
@@ -56,7 +57,7 @@ def create_pages_and_locales(apps, schema_editor):
             )
             home = Page.objects.get(pk=home.pk)
 
-        for index, (slug, (title, translation_key)) in enumerate(pages.items()):
+        for index, (slug, (title, translation_key, show_in_menus)) in enumerate(pages.items()):
             index_offset = index + 1
             # Create a new homepage
             article = Article(
@@ -74,6 +75,7 @@ def create_pages_and_locales(apps, schema_editor):
                     home_append=f"-{language_code}" if language_code != "en" else ""
                 ),
                 live=True,
+                show_in_menus=show_in_menus,
             )
 
             home.add_child(instance=article)
