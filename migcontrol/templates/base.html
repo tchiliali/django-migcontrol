@@ -87,10 +87,9 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarCollapse">
 
-      {% wagtail_site as current_site %}
-      {% with root_p=current_site.root_page %}
+        {% get_site_root as site_root %}
         <ul class="navbar-nav ms-auto">
-         {% for nav in root_p.get_children.specific.live.in_menu %}
+         {% for nav in site_root.localized.get_children.live.in_menu %}
           <li class="nav-item">
             {% slugurl_localized 'about' as about_url %}
             <a class="nav-link{% if page.url == nav.url %} active{% endif %}" href="{{ nav.url }}">{{ nav.title }}</a>
@@ -100,7 +99,6 @@
             <a class="nav-link" href="#">{% trans "Wiki" %}</a>
           </li>
         </ul>
-        {% endwith %}
 
         <form class="search-form d-flex" action="{% url 'search' %}" method="GET">
           <input name="query" class="form-control me-2" type="search" placeholder="{% trans "Search" %}" aria-label="Search">
