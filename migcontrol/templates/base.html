@@ -29,6 +29,8 @@
 <body>
   {% wagtailuserbar %}
 
+  {% get_site_root as site_root %}
+
   <nav class="navbar navbar-light navbar-expand-md mb-0 migcontrol-navbar-top">
     <div class="container-fluid">
       <ul class="lang-chooser">
@@ -58,16 +60,16 @@
           <a class="nav-link" aria-current="page" target="_blank" href="https://www.facebook.com/migcontrol"><i class="fab fa-facebook"></i></a>
         </li>
          <li class="nav-item">
-            {% slugurl_localized 'contact' as contact_url %}
-            <a class="nav-link{% if page.url == contact_url %} active{% endif %}" href="{{ contact_url }}">{% trans "Contact" %}</a>
+            {% get_page_by_slug site_root 'contact' as contact_page %}
+            <a class="nav-link{% if page.url == contact_page.url %} active{% endif %}" href="{{ contact_page.url }}">{{ contact_page.title }}</a>
           </li>
           <li class="nav-item">
-            {% slugurl_localized 'subscribe' as subscribe_url %}
-            <a class="nav-link{% if page.url == subscribe_url %} active{% endif %}" href="{{ subscribe_url }}">{% trans "Subscribe" %}</a>
+            {% get_page_by_slug site_root 'subscribe' as subscribe_page %}
+            <a class="nav-link{% if page.url == subscribe_page.url %} active{% endif %}" href="{{ subscribe_page.url }}">{{ subscribe_page.title }}</a>
           </li>
 		   <li class="nav-item">
-            {% slugurl_localized 'donate' as donate_url %}
-            <a class="nav-link{% if page.url == donate_url %} active{% endif %}" href="{{ donate_url }}">{% trans "Donate" %}</a>
+            {% get_page_by_slug site_root 'donate' as donate_page %}
+            <a class="nav-link{% if page.url == donate_page.url %} active{% endif %}" href="{{ donate_page.url }}">{{ donate_page.title }}</a>
           </li>
         </ul>
       </div>
@@ -87,9 +89,8 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarCollapse">
 
-        {% get_site_root as site_root %}
         <ul class="navbar-nav ms-auto">
-         {% for nav in site_root.localized.get_children.live.in_menu %}
+         {% for nav in site_root.get_children.live.in_menu %}
           <li class="nav-item">
             {% slugurl_localized 'about' as about_url %}
             <a class="nav-link{% if page.url == nav.url %} active{% endif %}" href="{{ nav.url }}">{{ nav.title }}</a>
@@ -169,16 +170,16 @@
       <div class="collapse navbar-collapse" id="footernavbar">
       <ul class="navbar-nav ms-auto">
         <li class="nav-item">
-          {% slugurl_localized 'imprint' as imprint_url %}
-          <a class="nav-link{% if page.url == imprint_url %} active{% endif %}" href="{{ imprint_url }}">{% trans "Imprint" %}</a>
+          {% get_page_by_slug site_root 'imprint' as imprint_page %}
+          <a class="nav-link{% if page.url == imprint_page.url %} active{% endif %}" href="{{ imprint_page.url }}">{{ imprint_page.title }}</a>
         </li>
         <li class="nav-item">
-          {% slugurl_localized 'data-protection' as data_protection_url %}
-          <a class="nav-link{% if page.url == data_protection_url %} active{% endif %}" href="{{ data_protection_url }}">{% trans "Data protection" %}</a>
+          {% get_page_by_slug site_root 'data-protection' as privacy_page %}
+          <a class="nav-link{% if page.url == privacy_page.url %} active{% endif %}" href="{{ privacy_page.url }}">{{ privacy_page.title }}</a>
         </li>
         <li class="nav-item">
-          {% slugurl_localized 'contact' as contact_url %}
-          <a class="nav-link{% if page.url == contact_url %} active{% endif %}" href="{{ contact_url }}">{% trans "Contact" %}</a>
+          {% get_page_by_slug site_root 'contact' as contact_page %}
+          <a class="nav-link{% if page.url == contact_page.url %} active{% endif %}" href="{{ contact_page.url }}">{{ contact_page.title }}</a>
         </li>
       </ul>
       </div>

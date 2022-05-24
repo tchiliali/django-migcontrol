@@ -77,8 +77,9 @@ class BlogIndexPage(ArticleBase, Page):
 
     @property
     def blogs(self):
-        # Get list of blog pages that are descendants of this page
-        blogs = BlogPage.objects.descendant_of(self).live()
+        # Get list of blog pages that exist - we don't care which blog they
+        # belong to for now, as blogs are not language sensitive
+        blogs = BlogPage.objects.all().live()
         blogs = (
             blogs.order_by("-date")
             .select_related("owner")
