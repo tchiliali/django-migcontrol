@@ -61,3 +61,19 @@ def get_static_thumbnail(file_: str, geometry, *args, **kwargs):
             *args,
             **kwargs,
         )
+
+
+@register.simple_tag(takes_context=True)
+def get_site_root(context):
+    # This returns a core.Page. The main menu needs to have the site.root_page
+    # defined else will return an object attribute error ('str' object has no
+    # attribute 'get_children')
+    return Site.find_for_request(context["request"]).root_page.localized
+
+
+@register.simple_tag(takes_context=False)
+def get_page_by_slug(parent, slug):
+    # This returns a core.Page. The main menu needs to have the site.root_page
+    # defined else will return an object attribute error ('str' object has no
+    # attribute 'get_children')
+    return parent.get_children().get(slug=slug)
