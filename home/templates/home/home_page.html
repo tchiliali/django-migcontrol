@@ -1,21 +1,17 @@
 {% extends "base.html" %}
 {% load static %}
 {% load wagtailcore_tags %}
- 
 {% block content %}
-
 <h1>A special template for the front page</h1>
 <p>
-<div class="bg-success p-2 text-dark bg-opacity-10">
+<div class="p-3 mb-2 bg-light text-dark">
   <div class="row">
-
     <div class="col">
-		<div class="card">
-     
+		<div class="card">   
 			<p class="text-center">Center aligned.</p>
 			<p class="text-center">Center aligned.</p>
 			<p class="text-center">Center aligned.</p>
-    </div>
+		</div>
 	</div>
     <div class="col">
 		<div class="card">
@@ -38,5 +34,4 @@
 {% for block in page.body %}
     {% include_block block %}
 {% endfor %}
-
 {% endblock content %}
