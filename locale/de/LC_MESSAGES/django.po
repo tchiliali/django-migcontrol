@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-02-19 20:15+0000\n"
+"POT-Creation-Date: 2022-05-30 21:14+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -34,7 +34,7 @@ msgstr "Land"
 msgid "organization type"
 msgstr "Art der Organisation"
 
-#: archive/models.py:105 blog/models.py:268
+#: archive/models.py:105
 msgid "Author"
 msgstr "Autor*in"
 
@@ -54,143 +54,100 @@ msgstr "Ort"
 msgid "Back to index"
 msgstr "Zum Verzeichnis"
 
-#: blog/models.py:134
-msgid "Blog index"
-msgstr "Blog Verzeichnis"
-
-#: blog/models.py:141
-msgid "Category Name"
-msgstr "Kategorie"
-
-#: blog/models.py:149
-msgid ""
-"Categories, unlike tags, can have a hierarchy. You might have a Jazz "
-"category, and under that have children categories for Bebop and Big Band. "
-"Totally optional."
-msgstr ""
-
-#: blog/models.py:159
-msgid "Blog Category"
-msgstr "Blog Kategorie"
-
-#: blog/models.py:160
-msgid "Blog Categories"
-msgstr "Blog Kategorien"
-
-#: blog/models.py:193
-msgid "Category"
-msgstr "Kategorie"
-
-#: blog/models.py:230
-msgid "body (HTML)"
-msgstr ""
-
-#: blog/models.py:232
-msgid "body (Markdown)"
-msgstr ""
-
-#: blog/models.py:248
-msgid "Post date"
-msgstr "Veröffentlicht am"
-
-#: blog/models.py:251
-msgid ""
-"This date may be displayed on the blog post. It is not used to schedule "
-"posts to go live at a later date."
-msgstr ""
-
-#: blog/models.py:261
-msgid "Header image"
-msgstr "Header-Bild"
-
-#: blog/models.py:319
-msgid "Blog page"
-msgstr "Blogseite"
-
-#: blog/models.py:320
-msgid "Blog pages"
-msgstr "Blogseiten"
-
-#: blog/models.py:357 blog/models.py:365
-msgid "Wagtail image"
-msgstr ""
-
-#: blog/models.py:374
-msgid "Categories"
-msgstr "Kategorien"
-
-#: blog/templates/blog/blog_post.html:10
+#: blog/templates/blog/blog_post.html:11
 msgid "written by"
 msgstr "von"
 
-#: blog/templates/blog/index.html:12
-msgid "Latest updates"
-msgstr "Letzte Updates"
-
-#: blog/templates/blog/index.html:33
+#: blog/templates/blog/index.html:38
 msgid "Read more"
 msgstr "Mehr lesen"
 
-#: blog/templates/blog/index.html:44
+#: blog/templates/blog/index.html:49
 msgid "Older"
 msgstr "Älter"
 
-#: blog/templates/blog/index.html:47
+#: blog/templates/blog/index.html:52
 msgid "Newer"
 msgstr "Neuer"
 
-#: migcontrol/templates/base.html:62
-msgid "Donate"
-msgstr "Spenden"
-
-#: migcontrol/templates/base.html:66 migcontrol/templates/base.html:137
-msgid "Subscribe"
-msgstr "Abonnieren"
-
-#: migcontrol/templates/base.html:70 migcontrol/templates/base.html:174
-msgid "Contact"
-msgstr "Kontakt"
-
-#: migcontrol/templates/base.html:92
-msgid "About"
-msgstr "Über Uns"
-
-#: migcontrol/templates/base.html:95
+#: migcontrol/templates/base.html:100
 msgid "Wiki"
 msgstr "Wiki"
 
-#: migcontrol/templates/base.html:99
-msgid "Blog"
-msgstr "Blog"
-
-#: migcontrol/templates/base.html:103
-msgid "Archive"
-msgstr "Archiv"
-
-#: migcontrol/templates/base.html:107 migcontrol/templates/base.html:108
+#: migcontrol/templates/base.html:105
 msgid "Search"
 msgstr "Suchen"
 
-#: migcontrol/templates/base.html:125
+#: migcontrol/templates/base.html:133
 msgid "Subscribe to our monthly review"
 msgstr "Abonniere unsere Presseschau"
 
-#: migcontrol/templates/base.html:127
+#: migcontrol/templates/base.html:135
 msgid "Show all issues"
 msgstr "Alle Ausgaben"
 
-#: migcontrol/templates/base.html:133
+#: migcontrol/templates/base.html:141
 msgid "Email"
 msgstr "Email"
 
 #: migcontrol/templates/base.html:145
+msgid "Subscribe"
+msgstr "Abonnieren"
+
+#: migcontrol/templates/base.html:153
 msgid "Social Media"
 msgstr "Social Media"
 
-#: migcontrol/templates/base.html:166
-msgid "Imprint"
-msgstr "Impressum"
+#~ msgid "Blog index"
+#~ msgstr "Blog Verzeichnis"
 
-#: migcontrol/templates/base.html:170
-msgid "Data protection"
-msgstr "Datenschutz"
+#~ msgid "Category Name"
+#~ msgstr "Kategorie"
+
+#~ msgid "Blog Category"
+#~ msgstr "Blog Kategorie"
+
+#~ msgid "Blog Categories"
+#~ msgstr "Blog Kategorien"
+
+#~ msgid "Category"
+#~ msgstr "Kategorie"
+
+#~ msgid "Post date"
+#~ msgstr "Veröffentlicht am"
+
+#~ msgid "Header image"
+#~ msgstr "Header-Bild"
+
+#~ msgid "Blog page"
+#~ msgstr "Blogseite"
+
+#~ msgid "Blog pages"
+#~ msgstr "Blogseiten"
+
+#~ msgid "Categories"
+#~ msgstr "Kategorien"
+
+#~ msgid "Latest updates"
+#~ msgstr "Letzte Updates"
+
+#~ msgid "Donate"
+#~ msgstr "Spenden"
+
+#~ msgid "Contact"
+#~ msgstr "Kontakt"
+
+#~ msgid "About"
+#~ msgstr "Über Uns"
+
+#~ msgid "Blog"
+#~ msgstr "Blog"
+
+#~ msgid "Archive"
+#~ msgstr "Archiv"
+
+#~ msgid "Imprint"
+#~ msgstr "Impressum"
+
+#~ msgid "Data protection"
+#~ msgstr "Datenschutz"
