@@ -14,7 +14,6 @@ from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import slugify
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
 from modelcluster.fields import ParentalKey
 from modelcluster.tags import ClusterTaggableManager
 from taggit.models import Tag
@@ -42,6 +41,8 @@ from wagtailmarkdown.templatetags.wagtailmarkdown import markdown
 
 from home.models import ArticleBase
 from migcontrol.utils import toc
+
+# from django.utils.translation import ugettext_lazy as _
 
 
 COMMENTS_APP = getattr(settings, "COMMENTS_APP", None)
@@ -141,21 +142,21 @@ class BlogIndexPage(ArticleBase, Page):
         return context
 
     class Meta:
-        verbose_name = _("Blog index")
+        verbose_name = "Blog index"
 
     subpage_types = ["blog.BlogPage"]
 
 
 @register_snippet
 class BlogCategory(models.Model):
-    name = models.CharField(max_length=80, unique=True, verbose_name=_("Category Name"))
+    name = models.CharField(max_length=80, unique=True, verbose_name=("Category Name"))
     slug = models.SlugField(unique=True, max_length=80)
     parent = models.ForeignKey(
         "self",
         blank=True,
         null=True,
         related_name="children",
-        help_text=_(
+        help_text=(
             "Categories, unlike tags, can have a hierarchy. You might have a "
             "Jazz category, and under that have children categories for Bebop"
             " and Big Band. Totally optional."
@@ -166,8 +167,8 @@ class BlogCategory(models.Model):
 
     class Meta:
         ordering = ["name"]
-        verbose_name = _("Blog Category")
-        verbose_name_plural = _("Blog Categories")
+        verbose_name = "Blog Category"
+        verbose_name_plural = "Blog Categories"
 
     panels = [
         FieldPanel("name"),
@@ -200,7 +201,7 @@ class BlogCategoryBlogPage(models.Model):
     category = models.ForeignKey(
         BlogCategory,
         related_name="+",
-        verbose_name=_("Category"),
+        verbose_name=("Category"),
         on_delete=models.CASCADE,
     )
     page = ParentalKey("BlogPage", related_name="categories")
@@ -237,9 +238,9 @@ def limit_author_choices():
 
 
 class BlogPage(Page):
-    body_richtext = models.TextField(verbose_name=_("body (HTML)"), blank=True)
+    body_richtext = models.TextField(verbose_name=("body (HTML)"), blank=True)
     body_markdown = MarkdownField(
-        default="", verbose_name=_("body (Markdown)"), blank=True
+        default="", verbose_name=("body (Markdown)"), blank=True
     )
     body_mixed = StreamField(
         [
@@ -255,15 +256,15 @@ class BlogPage(Page):
 
     add_toc = models.BooleanField(
         default=False,
-        verbose_name=_("Display TOC (Table Of Contents)"),
-        help_text=_("A TOC can be auto-generated"),
+        verbose_name=("Display TOC (Table Of Contents)"),
+        help_text=("A TOC can be auto-generated"),
     )
 
     tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
     date = models.DateField(
-        _("Post date"),
+        ("Post date"),
         default=datetime.datetime.today,
-        help_text=_(
+        help_text=(
             "This date may be displayed on the blog post. It is not "
             "used to schedule posts to go live at a later date."
         ),
@@ -274,14 +275,14 @@ class BlogPage(Page):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
-        verbose_name=_("Header image"),
+        verbose_name=("Header image"),
     )
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         blank=True,
         null=True,
         limit_choices_to=limit_author_choices,
-        verbose_name=_("Author"),
+        verbose_name=("Author"),
         on_delete=models.SET_NULL,
         related_name="author_pages",
     )
@@ -368,8 +369,8 @@ class BlogPage(Page):
         return context
 
     class Meta:
-        verbose_name = _("Blog page")
-        verbose_name_plural = _("Blog pages")
+        verbose_name = "Blog page"
+        verbose_name_plural = "Blog pages"
 
     parent_page_types = ["blog.BlogIndexPage"]
 
@@ -406,7 +407,7 @@ class WordpressMapping(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
-        verbose_name=_("Wagtail image"),
+        verbose_name=("Wagtail image"),
     )
     document = models.ForeignKey(
         get_document_model_string(),
@@ -414,7 +415,7 @@ class WordpressMapping(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
-        verbose_name=_("Wagtail image"),
+        verbose_name=("Wagtail image"),
     )
 
 
@@ -423,7 +424,7 @@ BlogPage.content_panels = [
     MultiFieldPanel(
         [
             FieldPanel("tags"),
-            InlinePanel("categories", label=_("Categories")),
+            InlinePanel("categories", label=("Categories")),
         ],
         heading="Tags and Categories",
     ),
