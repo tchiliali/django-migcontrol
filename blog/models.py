@@ -261,15 +261,6 @@ class BlogPage(Page):
         related_name="+",
         verbose_name=("Header image"),
     )
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        blank=True,
-        null=True,
-        limit_choices_to=limit_author_choices,
-        verbose_name=("Author"),
-        on_delete=models.SET_NULL,
-        related_name="author_pages",
-    )
     authors = models.CharField(
         blank=True,
         null=True,
@@ -301,7 +292,7 @@ class BlogPage(Page):
             classname="publishing",
         ),
         FieldPanel("date"),
-        FieldPanel("author"),
+        FieldPanel("authors"),
     ]
 
     def get_body(self):
