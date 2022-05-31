@@ -607,6 +607,7 @@ class Command(BaseCommand):
                 )
                 header_image.file.save(file_, File(open(img_buffer, "rb")))
                 header_image.save()
+                print("Found and saved remote image from featured_image value")
             except UnicodeEncodeError:
                 print("unable to set header image {}".format(source))
 
@@ -619,6 +620,7 @@ class Command(BaseCommand):
                 print(f"Success fetching {api_url}")
                 json_data = json.loads(response.read())
                 if json_data["featured_media"]:
+                    print("Using featured_media value")
                     try:
                         featured_image_post_id = json_data["featured_media"]
                         header_image = WordpressMapping.objects.get(
@@ -648,5 +650,6 @@ class Command(BaseCommand):
             except urllib.error.HTTPError:
                 print(f"Error fetching {api_url}")
 
+        print("Setting header image to: {}".format(header_image))
         new_entry.header_image = header_image
         new_entry.save()
