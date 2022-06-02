@@ -5,6 +5,28 @@
 
 {% block sidebar %}
   <h1>{{ page.title }}</h1>
+
+  <p>{% trans "Filter by language" %}</p>
+  <p>
+  {% for language_code, language_name in LANGUAGES %}
+      {% get_language_info for language_code as lang %}
+      {% language language_code %}
+        <a class="badge {% if locale.language_code == language_code %}bg-dark{% else %}bg-secondary{% endif %}" href="{% url "blog:locale" locale=language_code %}">
+          {{ language_name }}
+        </a>
+      {% endlanguage %}
+  {% endfor %}
+  </p>
+
+  <p>{% trans "Filter by category" %}</p>
+  <p>
+  {% for list_category in categories %}
+      <a class="badge rounded-pill {% if category == list_category %}bg-dark{% else %}bg-secondary{% endif %}" href="{% url "blog:category" category=list_category.slug %}">
+        {{ list_category.name }}
+      </a>
+  {% endfor %}
+  </p>
+
   {% for block in page.body %}
     {% include_block block %}
   {% endfor %}

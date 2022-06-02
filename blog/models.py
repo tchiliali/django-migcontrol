@@ -92,7 +92,14 @@ class BlogIndexPage(ArticleBase, Page):
         return blogs
 
     def get_context(  # noqa: max-complexity=14
-        self, request, tag=None, category=None, author=None, *args, **kwargs
+        self,
+        request,
+        tag=None,
+        category=None,
+        author=None,
+        locale=None,
+        *args,
+        **kwargs
     ):
         context = super(BlogIndexPage, self).get_context(request, *args, **kwargs)
         blogs = self.blogs
@@ -112,6 +119,8 @@ class BlogIndexPage(ArticleBase, Page):
             blogs = blogs.filter(categories__category__name=category)
         if author:
             blogs = blogs.filter(authors__icontains=author)
+        if locale:
+            blogs = blogs.filter(locale=locale)
 
         # Pagination
         page = request.GET.get("page")
@@ -130,6 +139,8 @@ class BlogIndexPage(ArticleBase, Page):
 
         context["blogs"] = blogs
         context["category"] = category
+        context["locale"] = locale
+        context["categories"] = BlogCategory.objects.all()
         context["tag"] = tag
         context["author"] = author
         context["COMMENTS_APP"] = COMMENTS_APP

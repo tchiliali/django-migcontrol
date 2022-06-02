@@ -39,7 +39,7 @@
           {% get_current_language as LANGUAGE_CODE %}
           {% language language_code %}
               <li>
-              <a class="{% if language_code == LANGUAGE_CODE %}active{% endif %}" href="{% if page %}{% pageurl page.localized %}{% else %}/{{ language_code }}{% endif %}" rel="alternate" hreflang="{{ language_code }}" title="{{ lang.name_local }}">
+              <a class="{% if language_code == LANGUAGE_CODE %}active{% endif %}" href="{% if page %}{% pageurl page.localized %}{% else %}/{{ language_code }}{% endif %}" rel="alternate" hreflang="{{ language_code }}" title="{{ language_name }}">
                   {{ language_code }}
               </a>
               </li>

@@ -509,6 +509,18 @@ class Command(BaseCommand):
                     post_model_kwargs["translation_key"] = uuid.uuid4()
                 else:
                     translation.activate("de")
+            if any(c["slug"] == "fr" for c in categories):
+                if self.wagtail_locale:
+                    locale = Locale.objects.get(language_code="fr")
+                    post_model_kwargs["translation_key"] = uuid.uuid4()
+                else:
+                    translation.activate("fr")
+            if any(c["slug"] == "ar" for c in categories):
+                if self.wagtail_locale:
+                    locale = Locale.objects.get(language_code="ar")
+                    post_model_kwargs["translation_key"] = uuid.uuid4()
+                else:
+                    translation.activate("ar")
             elif self.locale:
                 if self.wagtail_locale:
                     locale = Locale.objects.get(language_code=self.locale)
