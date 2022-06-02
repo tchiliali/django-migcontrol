@@ -220,7 +220,9 @@ def get_blog_page_mapping(
         "date": date,
         "body_richtext": body,
         "owner": user,
-        "authors": authors,
+        # Not automatic mapping at the moment, we do it manually to check if
+        # authors is already set
+        # "authors": authors,
         "body_markdown": html2text.html2text(body, bodywidth=0),
         "locale": locale,
         "live": published,
@@ -588,6 +590,9 @@ class Command(BaseCommand):
                     self.meta_mappings[key][0],
                     value,
                 )
+
+        if not new_entry.authors:
+            new_entry.authors = authors
 
         new_entry.save()
 
