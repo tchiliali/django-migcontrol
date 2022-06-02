@@ -394,31 +394,32 @@ class Command(BaseCommand):
     def create_categories_and_tags(self, page, categories):
         tags_for_blog_entry = []
         categories_for_blog_entry = []
-        for records in categories.values():
-            if records[0]["taxonomy"] == "post_tag":
-                for record in records:
-                    tag_name = record["name"]
-                    new_tag = BlogTag.objects.get_or_create(name=tag_name)[0]
-                    tags_for_blog_entry.append(new_tag)
+        for records in categories:
+            if records["taxonomy"] == "post_tag":
+                tag_name = records["name"]
+                new_tag = BlogTag.objects.get_or_create(name=tag_name)[0]
+                tags_for_blog_entry.append(new_tag)
 
-            if records[0]["taxonomy"] == "category":
-                for record in records:
-                    category_name = record["name"]
-                    new_category = BlogCategory.objects.get_or_create(
-                        name=category_name
+            if records["taxonomy"] == "category":
+                category_name = records["name"]
+                slug = records["slug"]
+                new_category = BlogCategory.objects.get_or_create(
+                    slug=slug,
+                )[0]
+                new_category.name = category_name
+                new_category.save()
+                if records.get("parent"):
+                    parent_category = BlogCategory.objects.get_or_create(
+                        slug=records["parent"]["slug"],
                     )[0]
-                    if record.get("parent"):
-                        parent_category = BlogCategory.objects.get_or_create(
-                            name=record["parent"]["name"]
-                        )[0]
-                        parent_category.slug = record["parent"]["slug"]
-                        parent_category.save()
-                        parent = parent_category
-                        new_category.parent = parent
-                    else:
-                        parent = None
-                    categories_for_blog_entry.append(new_category)
-                    new_category.save()
+                    parent_category.name = records["parent"]["name"]
+                    parent_category.save()
+                    parent = parent_category
+                    new_category.parent = parent
+                else:
+                    parent = None
+                categories_for_blog_entry.append(new_category)
+                new_category.save()
 
         # loop through list of BlogCategory and BlogTag objects and create
         # BlogCategoryBlogPages(bcbp) for each category and BlogPageTag objects
@@ -491,6 +492,7 @@ class Command(BaseCommand):
                 for cat_dict in categories:
                     if "en" in cat_dict:
                         raise Exception("English category")
+
             # format the date
             date = post.get("date")[:10]
 
@@ -500,7 +502,14 @@ class Command(BaseCommand):
 
             published = post.get("status") == "publish"
 
-            if self.locale:
+            # Special detection of German blog posts
+            if any(c["slug"] == "de" for c in categories):
+                if self.wagtail_locale:
+                    locale = Locale.objects.get(language_code="de")
+                    post_model_kwargs["translation_key"] = uuid.uuid4()
+                else:
+                    translation.activate("de")
+            elif self.locale:
                 if self.wagtail_locale:
                     locale = Locale.objects.get(language_code=self.locale)
                     post_model_kwargs["translation_key"] = uuid.uuid4()
@@ -508,7 +517,7 @@ class Command(BaseCommand):
                     translation.activate(self.locale)
 
             print(f"Creating page '{title}'")
-            self.create_page(
+            page = self.create_page(
                 self.index_page,
                 locale,
                 post_id,
@@ -523,6 +532,9 @@ class Command(BaseCommand):
                 post.get("meta"),
                 **post_model_kwargs,
             )
+
+            self.create_categories_and_tags(page, categories)
+
             translation.activate(restore_locale)
 
     def create_page(  # noqa max-complexity: 16
@@ -658,3 +670,4 @@ class Command(BaseCommand):
         print("Setting header image to: {}".format(header_image))
         new_entry.header_image = header_image
         new_entry.save()
+        return new_entry

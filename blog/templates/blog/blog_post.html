@@ -33,7 +33,7 @@
             Posted in
                 {% for cat in blog.categories.all %}
                     <a href="{% url 'blog:category' cat.category.slug %}">{{ cat.category.name }}</a>{% if not forloop.last %}, {% endif %}
-                {% endfor %} |
+                {% endfor %}
         {% endif %}
 
     </div>

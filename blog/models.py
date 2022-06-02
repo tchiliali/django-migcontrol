@@ -145,7 +145,7 @@ class BlogIndexPage(ArticleBase, Page):
 
 @register_snippet
 class BlogCategory(models.Model):
-    name = models.CharField(max_length=80, unique=True, verbose_name=("Category Name"))
+    name = models.CharField(max_length=80, verbose_name=("Category Name"))
     slug = models.SlugField(unique=True, max_length=80)
     parent = models.ForeignKey(
         "self",
