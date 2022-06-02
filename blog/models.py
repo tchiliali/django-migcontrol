@@ -10,7 +10,6 @@ from django.core.paginator import PageNotAnInteger
 from django.core.paginator import Paginator
 from django.db import models
 from django.db.models import Count
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import slugify
 from django.utils.html import format_html
@@ -112,10 +111,7 @@ class BlogIndexPage(ArticleBase, Page):
                 category = get_object_or_404(BlogCategory, slug=category)
             blogs = blogs.filter(categories__category__name=category)
         if author:
-            if isinstance(author, str) and not author.isdigit():
-                blogs = blogs.filter(author__username=author)
-            else:
-                blogs = blogs.filter(author_id=author)
+            blogs = blogs.filter(authors__icontains=author)
 
         # Pagination
         page = request.GET.get("page")
@@ -214,27 +210,15 @@ class BlogPageTag(TaggedItemBase):
     content_object = ParentalKey("BlogPage", related_name="tagged_items")
 
 
+def limit_author_choices():
+    """Legacy function to appease migration error."""
+    return None
+
+
 @register_snippet
 class BlogTag(Tag):
     class Meta:
         proxy = True
-
-
-def limit_author_choices():
-    """Limit choices in blog author field based on config settings"""
-    LIMIT_AUTHOR_CHOICES = getattr(settings, "BLOG_LIMIT_AUTHOR_CHOICES_GROUP", None)
-    if LIMIT_AUTHOR_CHOICES:
-        if isinstance(LIMIT_AUTHOR_CHOICES, str):
-            limit = Q(groups__name=LIMIT_AUTHOR_CHOICES)
-        else:
-            limit = Q()
-            for s in LIMIT_AUTHOR_CHOICES:
-                limit = limit | Q(groups__name=s)
-        if getattr(settings, "BLOG_LIMIT_AUTHOR_CHOICES_ADMIN", False):
-            limit = limit | Q(is_staff=True)
-    else:
-        limit = {"is_staff": True}
-    return limit
 
 
 class BlogPage(Page):
@@ -277,14 +261,12 @@ class BlogPage(Page):
         related_name="+",
         verbose_name=("Header image"),
     )
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+    authors = models.CharField(
         blank=True,
         null=True,
-        limit_choices_to=limit_author_choices,
-        verbose_name=("Author"),
-        on_delete=models.SET_NULL,
-        related_name="author_pages",
+        verbose_name="author(s)",
+        max_length=255,
+        help_text="Mention author(s) by the name to be displayed",
     )
 
     search_fields = Page.search_fields + [
@@ -310,7 +292,7 @@ class BlogPage(Page):
             classname="publishing",
         ),
         FieldPanel("date"),
-        FieldPanel("author"),
+        FieldPanel("authors"),
     ]
 
     def get_body(self):

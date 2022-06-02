@@ -7,8 +7,8 @@
     <p class="text-primary">
         <span class="fa fa-clock"></span>
         {{ blog.date|date:"F jS, Y" }}
-        {% if blog.author %}
-        - {% trans "written by" %}: {{ blog.author|default:"" }}
+        {% if blog.authors %}
+        - {% trans "written by" %}: {{ blog.authors|default:"" }}
         {% endif %}
     </p>
 {% endif %}

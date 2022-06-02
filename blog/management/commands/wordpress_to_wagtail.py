@@ -165,14 +165,25 @@ WP_POSTMETA_MAPPING = {
 
 
 def get_archive_page_mapping(
-    index, locale, post_id, published, title, date, slug, body, excerpt, user, meta
+    index,
+    locale,
+    post_id,
+    published,
+    title,
+    date,
+    slug,
+    body,
+    excerpt,
+    user,
+    authors,
+    meta,
 ):
     return {
         "title": title,
         "slug": slug,
         "search_description": excerpt,
         "owner": user,
-        "author": user,
+        # "authors": authors,
         "description": body,
         "locale": locale,
         "live": published,
@@ -180,7 +191,18 @@ def get_archive_page_mapping(
 
 
 def get_blog_page_mapping(
-    index, locale, post_id, published, title, date, slug, body, excerpt, user, meta
+    index,
+    locale,
+    post_id,
+    published,
+    title,
+    date,
+    slug,
+    body,
+    excerpt,
+    user,
+    authors,
+    meta,
 ):
 
     # Clean up UPPERCASE h1 and h2s in blog posts
@@ -198,7 +220,7 @@ def get_blog_page_mapping(
         "date": date,
         "body_richtext": body,
         "owner": user,
-        # "author": user,
+        "authors": authors,
         "body_markdown": html2text.html2text(body, bodywidth=0),
         "locale": locale,
         "live": published,
@@ -448,8 +470,20 @@ class Command(BaseCommand):
             excerpt = post.get("excerpt") or truncatechars(striptags(body), 100)
 
             # author/user data
-            author = post.get("author")
-            user = self.create_user(author)
+            authors = ""
+            for author in post.get("authors").values():
+                if authors != "":
+                    authors += ", "
+                if author["first_name"]:
+                    authors += author["first_name"]
+                    if author["last_name"]:
+                        authors += " " + author["last_name"]
+                elif author["username"]:
+                    authors += author["username"]
+                else:
+                    authors += "pseudonym"
+
+            user = self.create_user(post.get("creator"))
             categories = post.get("terms").get("category")
             if categories:
                 for cat_dict in categories:
@@ -483,6 +517,7 @@ class Command(BaseCommand):
                 body,
                 excerpt,
                 user,
+                authors,
                 post.get("meta"),
                 **post_model_kwargs,
             )
@@ -500,6 +535,7 @@ class Command(BaseCommand):
         body,
         excerpt,
         user,
+        authors,
         meta,
         **kwargs,
     ):
@@ -517,6 +553,7 @@ class Command(BaseCommand):
                 body,
                 excerpt,
                 user,
+                authors,
                 meta,
             ).items():
                 setattr(new_entry, k, v)
@@ -534,6 +571,7 @@ class Command(BaseCommand):
                         body,
                         excerpt,
                         user,
+                        authors,
                         meta,
                     ),
                     **kwargs,
@@ -569,6 +607,7 @@ class Command(BaseCommand):
                 )
                 header_image.file.save(file_, File(open(img_buffer, "rb")))
                 header_image.save()
+                print("Found and saved remote image from featured_image value")
             except UnicodeEncodeError:
                 print("unable to set header image {}".format(source))
 
@@ -581,6 +620,7 @@ class Command(BaseCommand):
                 print(f"Success fetching {api_url}")
                 json_data = json.loads(response.read())
                 if json_data["featured_media"]:
+                    print("Using featured_media value")
                     try:
                         featured_image_post_id = json_data["featured_media"]
                         header_image = WordpressMapping.objects.get(
@@ -610,5 +650,6 @@ class Command(BaseCommand):
             except urllib.error.HTTPError:
                 print(f"Error fetching {api_url}")
 
+        print("Setting header image to: {}".format(header_image))
         new_entry.header_image = header_image
         new_entry.save()
