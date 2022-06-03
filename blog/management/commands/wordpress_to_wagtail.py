@@ -334,6 +334,38 @@ class Command(BaseCommand):
         """converts html symbols so they show up correctly in wagtail"""
         return html.unescape(text)
 
+    def update_internal_links(self, body):
+        """create Image objects and transfer image files to media root"""
+        soup = BeautifulSoup(body, "html5lib")
+        internal_url_by_id = re.compile(r"p\=(\d+)")
+        for a_tag in soup.findAll("a"):
+            if not a_tag.get("href"):
+                continue  # Bad <a> tag
+            old_url = a_tag["href"]
+            new_url = None
+            if not old_url:
+                continue  # Bad <a> tag
+            if not old_url.startswith("/") and self.wordpress_base_url not in old_url:
+                continue  # Not proper internal path
+            print("")
+            print("Found something")
+            p_link = internal_url_by_id.search(old_url)
+            if p_link:
+                wordpress_id = p_link.group(1)
+                print("It matched {}".format(wordpress_id))
+                try:
+                    mapping = WordpressMapping.objects.get(wp_post_id=wordpress_id)
+                    new_url = mapping.page.url
+                    print("Replacing {} with {}".format(old_url, new_url))
+                except WordpressMapping.DoesNotExist:
+                    print("No mapping found for WP post id: {}".format(wordpress_id))
+            else:
+                print(old_url)
+            if new_url:
+                body = body.replace(old_url, new_url)
+        body = self.convert_html_entities(body)
+        return body
+
     def create_images_from_urls_in_content(self, body):
         """create Image objects and transfer image files to media root"""
         soup = BeautifulSoup(body, "html5lib")
@@ -469,6 +501,7 @@ class Command(BaseCommand):
 
             # get image info from content and create image objects
             body = self.create_images_from_urls_in_content(body)
+            body = self.update_internal_links(body)
 
             excerpt = post.get("excerpt") or truncatechars(striptags(body), 100)
 
@@ -682,4 +715,7 @@ class Command(BaseCommand):
         print("Setting header image to: {}".format(header_image))
         new_entry.header_image = header_image
         new_entry.save()
+        wp_mapping = WordpressMapping.objects.get_or_create(wp_post_id=post_id)[0]
+        wp_mapping.page = new_entry
+        wp_mapping.save()
         return new_entry
