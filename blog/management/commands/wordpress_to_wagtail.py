@@ -283,7 +283,7 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         """gets data from WordPress site"""
-
+        translation.activate("en")
         self.IndexModel = apps.get_model(options["app"], options["index_model"])
         self.PostModel = apps.get_model(options["app"], options["post_model"])
         self.xml_path = options.get("xml")
@@ -338,21 +338,20 @@ class Command(BaseCommand):
         """create Image objects and transfer image files to media root"""
         soup = BeautifulSoup(body, "html5lib")
         internal_url_by_id = re.compile(r"p\=(\d+)")
+        mapping = None
         for a_tag in soup.findAll("a"):
             if not a_tag.get("href"):
                 continue  # Bad <a> tag
             old_url = a_tag["href"]
-            new_url = None
             if not old_url:
                 continue  # Bad <a> tag
-            if not old_url.startswith("/") or self.wordpress_base_url not in old_url:
+            if not old_url.startswith("/") and self.wordpress_base_url not in old_url:
                 continue  # Not proper internal path
             p_link = internal_url_by_id.search(old_url)
             if p_link:
                 wordpress_id = p_link.group(1)
                 try:
                     mapping = WordpressMapping.objects.get(wp_post_id=wordpress_id)
-                    new_url = mapping.page.url
                 except WordpressMapping.DoesNotExist:
                     print("No mapping found for WP post id: {}".format(wordpress_id))
             elif "wp-content" in old_url:
@@ -364,18 +363,26 @@ class Command(BaseCommand):
                         | Q(document__file__endswith=file_name)
                         | Q(image__file__endswith=file_name)
                     )
-                    if mapping.image:
-                        new_url = mapping.image.url
-                    elif mapping.document:
-                        new_url = mapping.document.url
                 except WordpressMapping.DoesNotExist:
                     print("No mapping found for WP URL: {}".format(old_url))
             else:
                 print(old_url)
-            if new_url:
-                print("Replacing {} with {}".format(old_url, new_url))
-                body = body.replace(old_url, new_url)
-        body = self.convert_html_entities(body)
+            if mapping:
+                if mapping.page:
+                    element = soup.new_tag("a")
+                    element["linktype"] = "page"
+                    element["id"] = mapping.page.id
+                if mapping.image:
+                    element = soup.new_tag("a")
+                    element["linktype"] = "image"
+                    element["id"] = mapping.image.id
+                elif mapping.document:
+                    element = soup.new_tag("a")
+                    element["linktype"] = "document"
+                    element["id"] = mapping.document.id
+                element.contents = a_tag.contents
+                a_tag.replace_with(element)
+        body = self.convert_html_entities(str(soup))
         return body
 
     def create_images_from_urls_in_content(self, body):  # noqa max-complexity: 14
@@ -559,9 +566,9 @@ class Command(BaseCommand):
                 if self.wagtail_locale:
                     locale = Locale.objects.get(language_code=self.locale)
                     post_model_kwargs["translation_key"] = uuid.uuid4()
+                    translation.activate(self.locale)
                 else:
                     translation.activate(self.locale)
-
             print(f"Creating page '{title}'")
             page = self.create_page(
                 self.index_page,
