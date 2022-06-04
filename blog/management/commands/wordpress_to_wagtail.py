@@ -357,14 +357,11 @@ class Command(BaseCommand):
             elif "wp-content" in old_url:
                 old_url = old_url.replace(self.wordpress_base_url, "")
                 file_name = old_url.split("/")[-1]
-                try:
-                    mapping = WordpressMapping.objects.get(
-                        Q(wp_url__contains=old_url)
-                        | Q(document__file__endswith=file_name)
-                        | Q(image__file__endswith=file_name)
-                    )
-                except WordpressMapping.DoesNotExist:
-                    print("No mapping found for WP URL: {}".format(old_url))
+                mapping = WordpressMapping.objects.filter(
+                    Q(wp_url__contains=old_url)
+                    | (Q(document__file__endswith=file_name) if file_name else Q())
+                    | (Q(image__file__endswith=file_name) if file_name else Q())
+                ).first()
             else:
                 print(old_url)
             if mapping:
