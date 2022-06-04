@@ -334,7 +334,7 @@ class Command(BaseCommand):
         """converts html symbols so they show up correctly in wagtail"""
         return html.unescape(text)
 
-    def update_internal_links(self, body):
+    def update_internal_links(self, body):  # noqa max-complexity: 14
         """create Image objects and transfer image files to media root"""
         soup = BeautifulSoup(body, "html5lib")
         internal_url_by_id = re.compile(r"p\=(\d+)")
@@ -345,28 +345,40 @@ class Command(BaseCommand):
             new_url = None
             if not old_url:
                 continue  # Bad <a> tag
-            if not old_url.startswith("/") and self.wordpress_base_url not in old_url:
+            if not old_url.startswith("/") or self.wordpress_base_url not in old_url:
                 continue  # Not proper internal path
-            print("")
-            print("Found something")
             p_link = internal_url_by_id.search(old_url)
             if p_link:
                 wordpress_id = p_link.group(1)
-                print("It matched {}".format(wordpress_id))
                 try:
                     mapping = WordpressMapping.objects.get(wp_post_id=wordpress_id)
                     new_url = mapping.page.url
-                    print("Replacing {} with {}".format(old_url, new_url))
                 except WordpressMapping.DoesNotExist:
                     print("No mapping found for WP post id: {}".format(wordpress_id))
+            elif "wp-content" in old_url:
+                old_url = old_url.replace(self.wordpress_base_url, "")
+                file_name = old_url.split("/")[-1]
+                try:
+                    mapping = WordpressMapping.objects.get(
+                        Q(wp_url__contains=old_url)
+                        | Q(document__file__endswith=file_name)
+                        | Q(image__file__endswith=file_name)
+                    )
+                    if mapping.image:
+                        new_url = mapping.image.url
+                    elif mapping.document:
+                        new_url = mapping.document.url
+                except WordpressMapping.DoesNotExist:
+                    print("No mapping found for WP URL: {}".format(old_url))
             else:
                 print(old_url)
             if new_url:
+                print("Replacing {} with {}".format(old_url, new_url))
                 body = body.replace(old_url, new_url)
         body = self.convert_html_entities(body)
         return body
 
-    def create_images_from_urls_in_content(self, body):
+    def create_images_from_urls_in_content(self, body):  # noqa max-complexity: 14
         """create Image objects and transfer image files to media root"""
         soup = BeautifulSoup(body, "html5lib")
         for img in soup.findAll("img"):
@@ -506,19 +518,8 @@ class Command(BaseCommand):
             excerpt = post.get("excerpt") or truncatechars(striptags(body), 100)
 
             # author/user data
-            authors = ""
-            for author in post.get("authors").values():
-                if authors != "":
-                    authors += ", "
-                if author["first_name"]:
-                    authors += author["first_name"]
-                    if author["last_name"]:
-                        authors += " " + author["last_name"]
-                elif author["username"]:
-                    authors += author["username"]
-                else:
-                    authors += "pseudonym"
-
+            # We don't have any proper values for authors, just use creator
+            authors = post.get("creator")
             user = self.create_user(post.get("creator"))
             categories = post.get("terms").get("category")
             if categories:
@@ -715,7 +716,21 @@ class Command(BaseCommand):
         print("Setting header image to: {}".format(header_image))
         new_entry.header_image = header_image
         new_entry.save()
-        wp_mapping = WordpressMapping.objects.get_or_create(wp_post_id=post_id)[0]
+        wp_url = urllib.parse.urljoin(self.wordpress_base_url, slug)
+        try:
+            wp_mapping = WordpressMapping.objects.get(
+                Q(wp_post_id=post_id) | (Q(wp_url=wp_url)) if wp_url else Q()
+            )
+        except WordpressMapping.DoesNotExist:
+            wp_mapping = WordpressMapping()
+        except WordpressMapping.MultipleObjectsReturned:
+            wp_mapping = WordpressMapping.objects.get(wp_post_id=post_id)
+            if wp_url:
+                WordpressMapping.objects.filter(wp_url=wp_url).exclude(
+                    id=wp_mapping.id
+                ).delete()
         wp_mapping.page = new_entry
+        wp_mapping.wp_url = wp_url
+        wp_mapping.wp_post_id = post_id
         wp_mapping.save()
         return new_entry
