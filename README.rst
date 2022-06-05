@@ -81,3 +81,14 @@ After importing stuff, you can make the new pages ready for translation by synch
 .. code-block:: console
 
     python manage.py sync_locale_trees
+
+
+Right-To-Left notes
+-------------------
+
+We create an RTL version of the final bootstrap artifact quite manually:
+
+1. Copy the latest generated version of ``main.css`` to ``/css/input.css``.
+2. Run ``docker build -f Dockerfile_rtlcss -t rtlcss:latest .``
+3. Run ``docker run --volume $PWD/css:/css rtlcss:latest``
+4. Copy outputs ``cp css/output.min.css migcontrol/static/css/main.rtl.min.css``

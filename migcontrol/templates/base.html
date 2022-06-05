@@ -2,9 +2,9 @@
 {% load i18n %}
 {% load compress %}
 {% load migcontrol_tags %}
-
+{% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="{{ LANGUAGE_CODE }}"{% if LANGUAGE_CODE == "ar" %} dir="rtl"{% endif %}>
 <head>
   <meta charset="utf-8" />
   <title>
@@ -20,9 +20,13 @@
     {# Override this in templates to add extra stylesheets #}
   {% endblock %}
 
+  {% if LANGUAGE_CODE == "ar" %}
+    <link rel="stylesheet" type="text/css" href="{% static "css/main.rtl.min.css" %}">
+  {% else %}
   {% compress css %}
     <link rel="stylesheet" type="text/x-scss" href="{% static "scss/main.scss" %}">
   {% endcompress %}
+  {% endif %}
 
 </head>
 
@@ -36,7 +40,6 @@
       <ul class="lang-chooser">
       {% for language_code, language_name in LANGUAGES %}
           {% get_language_info for language_code as lang %}
-          {% get_current_language as LANGUAGE_CODE %}
           {% language language_code %}
               <li>
               <a class="{% if language_code == LANGUAGE_CODE %}active{% endif %}" href="{% if page %}{% pageurl page.localized %}{% else %}/{{ language_code }}{% endif %}" rel="alternate" hreflang="{{ language_code }}" title="{{ language_name }}">
