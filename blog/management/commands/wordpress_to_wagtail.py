@@ -523,7 +523,7 @@ class Command(BaseCommand):
 
             # author/user data
             # We don't have any proper values for authors, just use creator
-            authors = post.get("creator")
+            authors = post.get("creator").get("username")
             user = self.create_user(post.get("creator"))
             categories = post.get("terms").get("category")
             if categories:
