@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "home",
     "search",
     "archive",
+    "images",
 ]
 
 MIDDLEWARE = [
