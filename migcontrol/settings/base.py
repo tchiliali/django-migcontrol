@@ -261,3 +261,5 @@ WAGTAILMARKDOWN = {
     # ...
     "autodownload_fontawesome": False,
 }
+
+WAGTAILIMAGES_IMAGE_MODEL = "images.CustomImage"

@@ -7,10 +7,9 @@ from wagtail.images.formats import unregister_image_format
 class CaptionedImageFormat(Format):
     def editor_attributes(self, image, alt_text):
         # need to add contenteditable=false to prevent editing within the embed
-        original_attrs = super(CaptionedImageFormat, self).editor_attributes(
-            image, alt_text
-        )
-        return 'contenteditable="false" ' + original_attrs
+        attrs = super(CaptionedImageFormat, self).editor_attributes(image, alt_text)
+        attrs["contenteditable"] = "false"
+        return attrs
 
     def image_to_html(self, image, alt_text, extra_attributes=""):
         rendition = image.get_rendition(self.filter_spec)

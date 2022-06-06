@@ -22,7 +22,7 @@ from django.utils.html import linebreaks
 from django.utils.text import slugify
 from PIL import Image as PILImage
 from wagtail.core.models import Locale
-from wagtail.images.models import Image
+from wagtail.images import get_image_model
 
 from archive.models import ArchivePageLocation
 from archive.models import LocationPage
@@ -46,6 +46,7 @@ except ImportError:  # 2.x
 
     html = HTMLParser.HTMLParser()
 
+Image = get_image_model()
 User = get_user_model()
 
 pattern_country_code = re.compile(r"\(([a-zA-Z]{2})\)")
@@ -376,7 +377,32 @@ class Command(BaseCommand):
             new_url = image.file.url
             body = body.replace(old_url, new_url)
             body = self.convert_html_entities(body)
-        return body
+
+        new_body = ""
+        re_caption = re.compile(
+            r"^(.*)\[caption\s+id\=\"attachment_(\d+)\".*\](\<img.+\>)?(.+)\[/caption\](.*)$"
+        )
+        for line in body.splitlines():
+            line = line.strip()
+            match_caption = re_caption.search(line)
+            if match_caption:
+                before = match_caption.group(1) or ""
+                image_id = match_caption.group(2)
+                img_tag = match_caption.group(3) or ""
+                caption = match_caption.group(4)
+                after = match_caption.group(5) or ""
+                line = before + img_tag + after
+                updates = Image.objects.filter(mappings__wp_post_id=image_id).update(
+                    caption=caption
+                )
+                print("Setting captions on {} images".format(updates))
+                # if updates == 0:
+                #     raise Exception("No mappings for post id: {}".format(image_id))
+            elif "[caption" in line:
+                raise Exception("Why no match!? {}".format(line))
+
+            new_body += line
+        return new_body
 
     def create_user(self, author):
         username = author["username"]

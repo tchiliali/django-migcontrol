@@ -24,6 +24,7 @@ from wagtail.admin.edit_handlers import MultiFieldPanel
 from wagtail.admin.edit_handlers import StreamFieldPanel
 from wagtail.core import blocks
 from wagtail.core import hooks
+from wagtail.core.fields import RichTextField
 from wagtail.core.fields import StreamField
 from wagtail.core.models import Page
 from wagtail.core.templatetags.wagtailcore_tags import richtext
@@ -233,7 +234,7 @@ class BlogTag(Tag):
 
 
 class BlogPage(Page):
-    body_richtext = models.TextField(verbose_name=("body (HTML)"), blank=True)
+    body_richtext = RichTextField(verbose_name=("body (HTML)"), blank=True)
     body_markdown = MarkdownField(
         default="", verbose_name=("body (Markdown)"), blank=True
     )
@@ -334,7 +335,7 @@ class BlogPage(Page):
         [(name, [*children])]
         """
         html = self.get_body()
-        soup = BeautifulSoup(html)
+        soup = BeautifulSoup(html, "html5lib")
         # Need to build this in a list, otherwise evaluating whether it is
         # empty or not causes problems in templates
         return_list = []
@@ -399,7 +400,7 @@ class WordpressMapping(models.Model):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="+",
+        related_name="mappings",
         verbose_name=("Wagtail image"),
     )
     document = models.ForeignKey(
