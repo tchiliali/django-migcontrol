@@ -121,7 +121,6 @@ class Command(BaseCommand):
             wp_url=url_path,
             image=image,
             wp_post_id=wp_id,
-            caption=title,
         )
 
     def import_document(self, full_url, url_path, title, wp_id):
