@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load wagtailmarkdown i18n %}
+{% load i18n %}
 {% load wagtailcore_tags static %}
 {% load wagtailimages_tags %}
 
@@ -55,7 +55,7 @@
             <div class="card-body">
               <h5 class="card-title">{{ blog.title }}</h5>
               <p class="card-text"><small class="text-muted">{{ blog.date|date:"F jS, Y" }}</small></p>
-              <p class="card-text">{{ blog.body_markdown|markdown|striptags|truncatewords_html:30 }}</p>
+              <p class="card-text">{{ blog.body_richtext|richtext|striptags|truncatewords_html:30 }}</p>
               <p class="card-text">
                 <a href="{% pageurl blog %}" class="btn btn-primary">{% trans "Read more" %}</a>
               </p>

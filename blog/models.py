@@ -34,10 +34,6 @@ from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.search import index
 from wagtail.snippets.models import register_snippet
-from wagtailmarkdown.blocks import MarkdownBlock
-from wagtailmarkdown.edit_handlers import MarkdownPanel
-from wagtailmarkdown.fields import MarkdownField
-from wagtailmarkdown.templatetags.wagtailmarkdown import markdown
 
 from home.models import ArticleBase
 from migcontrol.utils import toc
@@ -235,15 +231,11 @@ class BlogTag(Tag):
 
 class BlogPage(Page):
     body_richtext = RichTextField(verbose_name=("body (HTML)"), blank=True)
-    body_markdown = MarkdownField(
-        default="", verbose_name=("body (Markdown)"), blank=True
-    )
     body_mixed = StreamField(
         [
             ("heading", blocks.CharBlock(classname="full title")),
             ("paragraph", blocks.RichTextBlock()),
             ("image", ImageChooserBlock()),
-            ("markdown", MarkdownBlock()),
         ],
         verbose_name="body (mixed)",
         blank=True,
@@ -282,7 +274,6 @@ class BlogPage(Page):
     )
 
     search_fields = Page.search_fields + [
-        index.SearchField("body_markdown"),
         index.SearchField("body_richtext"),
     ]
     blog_categories = models.ManyToManyField(
@@ -310,8 +301,6 @@ class BlogPage(Page):
     def get_body(self):
         if self.body_richtext:
             body = richtext(self.body_richtext)
-        elif self.body_markdown:
-            body = markdown(self.body_markdown)
         else:
             body = "".join([str(f.value) for f in self.body_mixed])
 
@@ -344,8 +333,6 @@ class BlogPage(Page):
         return return_list
 
     def save_revision(self, *args, **kwargs):
-        if not self.author:
-            self.author = self.owner
         return super(BlogPage, self).save_revision(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -423,7 +410,6 @@ BlogPage.content_panels = [
         heading="Tags and Categories",
     ),
     ImageChooserPanel("header_image"),
-    MarkdownPanel("body_markdown"),
     FieldPanel("body_richtext", classname="collapsed"),
     StreamFieldPanel("body_mixed"),
 ]

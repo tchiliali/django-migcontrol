@@ -3,7 +3,6 @@ from django.contrib.syndication.views import Feed
 from django.shortcuts import get_object_or_404
 from django.utils.feedgenerator import Atom1Feed
 from wagtail.core.models.i18n import Locale
-from wagtailmarkdown.utils import render_markdown
 
 from .models import BlogCategory
 from .models import BlogIndexPage
@@ -59,8 +58,6 @@ class LatestEntriesFeed(Feed):
         return item.title
 
     def item_description(self, item):
-        if item.specific.body_markdown:
-            return render_markdown(item.specific.body_markdown)
         return item.specific.body_richtext
 
     def item_link(self, item):

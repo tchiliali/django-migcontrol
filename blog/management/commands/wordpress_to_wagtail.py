@@ -5,7 +5,6 @@ import urllib.request
 import uuid
 
 import bleach
-import html2text
 from bleach.sanitizer import ALLOWED_TAGS
 from bs4 import BeautifulSoup
 from django.apps import apps
@@ -224,7 +223,6 @@ def get_blog_page_mapping(
         # Not automatic mapping at the moment, we do it manually to check if
         # authors is already set
         # "authors": authors,
-        "body_markdown": html2text.html2text(body, bodywidth=0),
         "locale": locale,
         "live": published,
     }
@@ -387,7 +385,6 @@ class Command(BaseCommand):
         """create Image objects and transfer image files to media root"""
         soup = BeautifulSoup(body, "html5lib")
         for img in soup.findAll("img"):
-            old_url = img["src"]
             __, file_ = os.path.split(img["src"])
             if not img["src"]:
                 continue  # Blank image
@@ -422,21 +419,30 @@ class Command(BaseCommand):
                     wp_url=urllib.parse.urlparse(cleaned_path).path, image=image
                 )
 
-            new_url = image.file.url
-            body = body.replace(old_url, new_url)
-            body = self.convert_html_entities(body)
+            # This is the stuff that the rich text editor needs to understand
+            embed_img_soup = soup.new_tag("embed")
+            embed_img_soup["alt"] = file_
+            embed_img_soup["embedtype"] = "image"
+            embed_img_soup["format"] = "fullwidth"
+            embed_img_soup["id"] = image.id
+            img.replace_with(embed_img_soup)
+            print("Replacing {} with {}".format(img, embed_img_soup))
 
         new_body = ""
+        body = str(soup)
         re_caption = re.compile(
-            r"^(.*)\[caption\s+id\=\"attachment_(\d+)\".*\](\<img.+\>)?(.+)\[/caption\](.*)$"
+            r"^(.*)\[caption\s+id\=\"attachment_(\d+)\".*\](\<(?:embed|img)[^\>]+\>)?(.+)\[/caption\](.*)$"
         )
         for line in body.splitlines():
             line = line.strip()
             match_caption = re_caption.search(line)
             if match_caption:
+                print(line)
+                self.has_captions = True
                 before = match_caption.group(1) or ""
                 image_id = match_caption.group(2)
                 img_tag = match_caption.group(3) or ""
+                print("putting img {}".format(img_tag))
                 caption = match_caption.group(4)
                 after = match_caption.group(5) or ""
                 line = before + img_tag + after
@@ -444,8 +450,8 @@ class Command(BaseCommand):
                     caption=caption
                 )
                 print("Setting captions on {} images".format(updates))
-                # if updates == 0:
-                #     raise Exception("No mappings for post id: {}".format(image_id))
+                if updates == 0:
+                    print("No mappings for post id: {}".format(image_id))
             elif "[caption" in line:
                 raise Exception("Why no match!? {}".format(line))
 
@@ -504,12 +510,18 @@ class Command(BaseCommand):
             BlogPageTag.objects.get_or_create(tag=tag, content_object=page)[0]
 
     def clean_body(self, body):
+        soup = BeautifulSoup(body, "html5lib")
+        # Beautiful soup unfortunately adds some noise to the structure, so we
+        # remove this again - see:
+        # https://stackoverflow.com/questions/21452823/beautifulsoup-how-should-i-obtain-the-body-contents
+        for attr in ["head", "html", "body"]:
+            if hasattr(soup, attr):
+                getattr(soup, attr).unwrap()
+        body = str(soup)
         return bleach.clean(
             body,
-            tags=ALLOWED_TAGS + ["p", "h1", "h2", "h3", "h4", "h5", "caption"],
-            attributes=[
-                "href",
-            ],
+            tags=ALLOWED_TAGS + ["p", "h1", "h2", "h3", "h4", "h5", "caption", "img"],
+            attributes=["href", "src", "alt"],
             strip=True,
         )
 
@@ -542,8 +554,14 @@ class Command(BaseCommand):
             body = self.clean_body(body)
 
             # get image info from content and create image objects
+            self.has_captions = False
             body = self.create_images_from_urls_in_content(body)
             body = self.update_internal_links(body)
+
+            if self.has_captions:
+                pass
+                # print(body)
+                # raise Exception()
 
             excerpt = post.get("excerpt") or truncatechars(striptags(body), 100)
 
