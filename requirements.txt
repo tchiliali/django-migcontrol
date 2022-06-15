@@ -3,7 +3,6 @@ wagtail>=2.15,<2.18
 django_libsass
 django-compressor<3
 psycopg2-binary
-html2text
 wagtail-markdown<1
 django-countries>=7,<8
 wagtail-localize>=1.0.1,<1.2

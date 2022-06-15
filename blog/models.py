@@ -24,6 +24,7 @@ from wagtail.admin.edit_handlers import MultiFieldPanel
 from wagtail.admin.edit_handlers import StreamFieldPanel
 from wagtail.core import blocks
 from wagtail.core import hooks
+from wagtail.core.fields import RichTextField
 from wagtail.core.fields import StreamField
 from wagtail.core.models import Page
 from wagtail.core.templatetags.wagtailcore_tags import richtext
@@ -33,10 +34,6 @@ from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.search import index
 from wagtail.snippets.models import register_snippet
-from wagtailmarkdown.blocks import MarkdownBlock
-from wagtailmarkdown.edit_handlers import MarkdownPanel
-from wagtailmarkdown.fields import MarkdownField
-from wagtailmarkdown.templatetags.wagtailmarkdown import markdown
 
 from home.models import ArticleBase
 from migcontrol.utils import toc
@@ -233,16 +230,12 @@ class BlogTag(Tag):
 
 
 class BlogPage(Page):
-    body_richtext = models.TextField(verbose_name=("body (HTML)"), blank=True)
-    body_markdown = MarkdownField(
-        default="", verbose_name=("body (Markdown)"), blank=True
-    )
+    body_richtext = RichTextField(verbose_name=("body (HTML)"), blank=True)
     body_mixed = StreamField(
         [
             ("heading", blocks.CharBlock(classname="full title")),
             ("paragraph", blocks.RichTextBlock()),
             ("image", ImageChooserBlock()),
-            ("markdown", MarkdownBlock()),
         ],
         verbose_name="body (mixed)",
         blank=True,
@@ -281,7 +274,6 @@ class BlogPage(Page):
     )
 
     search_fields = Page.search_fields + [
-        index.SearchField("body_markdown"),
         index.SearchField("body_richtext"),
     ]
     blog_categories = models.ManyToManyField(
@@ -309,8 +301,6 @@ class BlogPage(Page):
     def get_body(self):
         if self.body_richtext:
             body = richtext(self.body_richtext)
-        elif self.body_markdown:
-            body = markdown(self.body_markdown)
         else:
             body = "".join([str(f.value) for f in self.body_mixed])
 
@@ -334,7 +324,7 @@ class BlogPage(Page):
         [(name, [*children])]
         """
         html = self.get_body()
-        soup = BeautifulSoup(html)
+        soup = BeautifulSoup(html, "html5lib")
         # Need to build this in a list, otherwise evaluating whether it is
         # empty or not causes problems in templates
         return_list = []
@@ -343,8 +333,6 @@ class BlogPage(Page):
         return return_list
 
     def save_revision(self, *args, **kwargs):
-        if not self.author:
-            self.author = self.owner
         return super(BlogPage, self).save_revision(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -399,7 +387,7 @@ class WordpressMapping(models.Model):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="+",
+        related_name="mappings",
         verbose_name=("Wagtail image"),
     )
     document = models.ForeignKey(
@@ -422,7 +410,6 @@ BlogPage.content_panels = [
         heading="Tags and Categories",
     ),
     ImageChooserPanel("header_image"),
-    MarkdownPanel("body_markdown"),
     FieldPanel("body_richtext", classname="collapsed"),
     StreamFieldPanel("body_mixed"),
 ]

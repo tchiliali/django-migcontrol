@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "home",
     "search",
     "archive",
+    "images",
 ]
 
 MIDDLEWARE = [
@@ -260,3 +261,5 @@ WAGTAILMARKDOWN = {
     # ...
     "autodownload_fontawesome": False,
 }
+
+WAGTAILIMAGES_IMAGE_MODEL = "images.CustomImage"

@@ -6,7 +6,7 @@ from django.core.files import File
 from django.core.management.base import BaseCommand
 from PIL import Image as PILImage
 from wagtail.documents.models import Document
-from wagtail.images.models import Image
+from wagtail.images import get_image_model
 
 from blog import models
 from blog.wp_xml_parser import XML_parser
@@ -24,6 +24,7 @@ except ImportError:  # 2.x
 
     html = HTMLParser.HTMLParser()
 
+Image = get_image_model()
 User = get_user_model()
 
 

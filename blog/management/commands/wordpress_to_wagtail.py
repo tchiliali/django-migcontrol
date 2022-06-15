@@ -5,7 +5,6 @@ import urllib.request
 import uuid
 
 import bleach
-import html2text
 from bleach.sanitizer import ALLOWED_TAGS
 from bs4 import BeautifulSoup
 from django.apps import apps
@@ -22,7 +21,7 @@ from django.utils.html import linebreaks
 from django.utils.text import slugify
 from PIL import Image as PILImage
 from wagtail.core.models import Locale
-from wagtail.images.models import Image
+from wagtail.images import get_image_model
 
 from archive.models import ArchivePageLocation
 from archive.models import LocationPage
@@ -46,6 +45,7 @@ except ImportError:  # 2.x
 
     html = HTMLParser.HTMLParser()
 
+Image = get_image_model()
 User = get_user_model()
 
 pattern_country_code = re.compile(r"\(([a-zA-Z]{2})\)")
@@ -223,7 +223,6 @@ def get_blog_page_mapping(
         # Not automatic mapping at the moment, we do it manually to check if
         # authors is already set
         # "authors": authors,
-        "body_markdown": html2text.html2text(body, bodywidth=0),
         "locale": locale,
         "live": published,
     }
@@ -386,8 +385,17 @@ class Command(BaseCommand):
         """create Image objects and transfer image files to media root"""
         soup = BeautifulSoup(body, "html5lib")
         for img in soup.findAll("img"):
-            old_url = img["src"]
             __, file_ = os.path.split(img["src"])
+
+            # This is the class to use for aligning the image in Wagtail's
+            # RichTextField
+            alignment = "fullwidth"
+
+            if "alignright" in img.get("class", ""):
+                alignment = "right"
+            elif "alignleft" in img.get("class", ""):
+                alignment = "left"
+
             if not img["src"]:
                 continue  # Blank image
             if img["src"].startswith("data:"):
@@ -421,10 +429,44 @@ class Command(BaseCommand):
                     wp_url=urllib.parse.urlparse(cleaned_path).path, image=image
                 )
 
-            new_url = image.file.url
-            body = body.replace(old_url, new_url)
-            body = self.convert_html_entities(body)
-        return body
+            # This is the stuff that the rich text editor needs to understand
+            embed_img_soup = soup.new_tag("embed")
+            embed_img_soup["alt"] = file_
+            embed_img_soup["embedtype"] = "image"
+            embed_img_soup["format"] = alignment
+            embed_img_soup["id"] = image.id
+            img.replace_with(embed_img_soup)
+            print("Replacing {} with {}".format(img, embed_img_soup))
+
+        new_body = ""
+        body = str(soup)
+        re_caption = re.compile(
+            r"^(.*)\[caption\s+id\=\"attachment_(\d+)\".*\](\<(?:embed|img)[^\>]+\>)?(.+)\[/caption\](.*)$"
+        )
+        for line in body.splitlines():
+            line = line.strip()
+            match_caption = re_caption.search(line)
+            if match_caption:
+                print(line)
+                self.has_captions = True
+                before = match_caption.group(1) or ""
+                image_id = match_caption.group(2)
+                img_tag = match_caption.group(3) or ""
+                print("putting img {}".format(img_tag))
+                caption = match_caption.group(4)
+                after = match_caption.group(5) or ""
+                line = before + img_tag + after
+                updates = Image.objects.filter(mappings__wp_post_id=image_id).update(
+                    caption=caption
+                )
+                print("Setting captions on {} images".format(updates))
+                if updates == 0:
+                    print("No mappings for post id: {}".format(image_id))
+            elif "[caption" in line:
+                raise Exception("Why no match!? {}".format(line))
+
+            new_body += line
+        return new_body
 
     def create_user(self, author):
         username = author["username"]
@@ -478,14 +520,34 @@ class Command(BaseCommand):
             BlogPageTag.objects.get_or_create(tag=tag, content_object=page)[0]
 
     def clean_body(self, body):
+        soup = BeautifulSoup(body, "html5lib")
+        # Beautiful soup unfortunately adds some noise to the structure, so we
+        # remove this again - see:
+        # https://stackoverflow.com/questions/21452823/beautifulsoup-how-should-i-obtain-the-body-contents
+        for attr in ["head", "html", "body"]:
+            if hasattr(soup, attr):
+                getattr(soup, attr).unwrap()
+
+        for element in soup.findAll(lambda tag: not tag.contents and tag.name == "p"):
+            element.decompose()
+
+        body = str(soup)
         return bleach.clean(
             body,
-            tags=ALLOWED_TAGS + ["p", "h1", "h2", "h3", "h4", "h5", "caption"],
-            attributes=[
-                "href",
-            ],
+            tags=ALLOWED_TAGS + ["p", "h1", "h2", "h3", "h4", "h5", "caption", "img"],
+            attributes=["href", "src", "alt"],
             strip=True,
         )
+
+    def clean_body_final(self, body):
+        soup = BeautifulSoup(body, "html5lib")
+        # Beautiful soup unfortunately adds some noise to the structure, so we
+        # remove this again - see:
+        # https://stackoverflow.com/questions/21452823/beautifulsoup-how-should-i-obtain-the-body-contents
+        for attr in ["head", "html", "body"]:
+            if hasattr(soup, attr):
+                getattr(soup, attr).unwrap()
+        return str(soup)
 
     def create_blog_pages(  # noqa: max-complexity=12
         self, posts, blog_index, *args, **options
@@ -516,8 +578,14 @@ class Command(BaseCommand):
             body = self.clean_body(body)
 
             # get image info from content and create image objects
+            self.has_captions = False
             body = self.create_images_from_urls_in_content(body)
             body = self.update_internal_links(body)
+            body = self.clean_body_final(body)
+            if self.has_captions:
+                pass
+                # print(body)
+                # raise Exception()
 
             excerpt = post.get("excerpt") or truncatechars(striptags(body), 100)
 
