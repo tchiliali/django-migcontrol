@@ -20,14 +20,14 @@ class CaptionedImageFormat(Format):
             class_attr = ""
 
         return """<figure %s%s>
-            <img src="%s" width="%d" height="%d" alt="%s" />
+            <img src="%s" alt="%s" />
             <figcaption class="a4">%s</figcaption>
         </figure>""" % (
             extra_attributes,
             class_attr,
             escape(rendition.url),
-            rendition.width,
-            rendition.height,
+            # rendition.width,
+            # rendition.height,
             alt_text,
             image.caption,
         )

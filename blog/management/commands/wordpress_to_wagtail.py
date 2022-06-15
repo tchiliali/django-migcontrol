@@ -386,6 +386,16 @@ class Command(BaseCommand):
         soup = BeautifulSoup(body, "html5lib")
         for img in soup.findAll("img"):
             __, file_ = os.path.split(img["src"])
+
+            # This is the class to use for aligning the image in Wagtail's
+            # RichTextField
+            alignment = "fullwidth"
+
+            if "alignright" in img.get("class", ""):
+                alignment = "right"
+            elif "alignleft" in img.get("class", ""):
+                alignment = "left"
+
             if not img["src"]:
                 continue  # Blank image
             if img["src"].startswith("data:"):
@@ -423,7 +433,7 @@ class Command(BaseCommand):
             embed_img_soup = soup.new_tag("embed")
             embed_img_soup["alt"] = file_
             embed_img_soup["embedtype"] = "image"
-            embed_img_soup["format"] = "fullwidth"
+            embed_img_soup["format"] = alignment
             embed_img_soup["id"] = image.id
             img.replace_with(embed_img_soup)
             print("Replacing {} with {}".format(img, embed_img_soup))
@@ -517,6 +527,10 @@ class Command(BaseCommand):
         for attr in ["head", "html", "body"]:
             if hasattr(soup, attr):
                 getattr(soup, attr).unwrap()
+
+        for element in soup.findAll(lambda tag: not tag.contents and tag.name == "p"):
+            element.decompose()
+
         body = str(soup)
         return bleach.clean(
             body,
@@ -524,6 +538,16 @@ class Command(BaseCommand):
             attributes=["href", "src", "alt"],
             strip=True,
         )
+
+    def clean_body_final(self, body):
+        soup = BeautifulSoup(body, "html5lib")
+        # Beautiful soup unfortunately adds some noise to the structure, so we
+        # remove this again - see:
+        # https://stackoverflow.com/questions/21452823/beautifulsoup-how-should-i-obtain-the-body-contents
+        for attr in ["head", "html", "body"]:
+            if hasattr(soup, attr):
+                getattr(soup, attr).unwrap()
+        return str(soup)
 
     def create_blog_pages(  # noqa: max-complexity=12
         self, posts, blog_index, *args, **options
@@ -557,7 +581,7 @@ class Command(BaseCommand):
             self.has_captions = False
             body = self.create_images_from_urls_in_content(body)
             body = self.update_internal_links(body)
-
+            body = self.clean_body_final(body)
             if self.has_captions:
                 pass
                 # print(body)
