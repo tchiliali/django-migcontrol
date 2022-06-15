@@ -1,6 +1,9 @@
 from django.db import migrations
 
 
+# WARNING! ON POSTGRES YOU HAVE TO LOG IN AND RESET THE PRIMARY KEY SEQUENCE
+# FOR NEW IMAGES TO BE ADDED
+# ALTER SEQUENCE images_customimage_id_seq RESTART WITH 482;
 def forwards_func(apps, schema_editor):
     # We get the model from the versioned app registry;
     # if we directly import it, it'll be the wrong version
