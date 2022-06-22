@@ -21,100 +21,96 @@
     <link rel="stylesheet" type="text/x-scss" href="{% static "scss/main.scss" %}">
   {% endcompress %}
 </head>
-<style>
-#form{
-	margin-left:32%;
-}
-</style>
+
 <body>
   {% wagtailuserbar %}
   <nav class="navbar navbar-light navbar-expand-md mb-0 migcontrol-navbar-top">
     <div class="container-fluid">
-      <ul class="lang-chooser">
-      {% for language_code, language_name in LANGUAGES %}
-          {% get_language_info for language_code as lang %}
-          {% get_current_language as LANGUAGE_CODE %}
-          {% language language_code %}
-              <li>
-              <a class="{% if language_code == LANGUAGE_CODE %}active{% endif %}" href="{% if page %}{% pageurl page.localized %}{% else %}/{{ language_code }}{% endif %}" rel="alternate" hreflang="{{ language_code }}" title="{{ lang.name_local }}">
-                  {{ language_code }}
-              </a>
-              </li>
-          {% endlanguage %}
-      {% endfor %}
-      </ul>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#metamenucollapse" aria-controls="metamenucollapse" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="metamenucollapse">
+		<ul class="lang-chooser">
+		  {% for language_code, language_name in LANGUAGES %}
+			  {% get_language_info for language_code as lang %}
+			  {% get_current_language as LANGUAGE_CODE %}
+			  {% language language_code %}
+				  <li>
+				  <a class="{% if language_code == LANGUAGE_CODE %}active{% endif %}" href="{% if page %}{% pageurl page.localized %}{% else %}/{{ language_code }}{% endif %}" rel="alternate" hreflang="{{ language_code }}" title="{{ lang.name_local }}">
+					  {{ language_code }}
+				  </a>
+				  </li>
+			  {% endlanguage %}
+		  {% endfor %}
+		</ul>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#metamenucollapse" aria-controls="metamenucollapse" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+		</button>
+    <div class="collapse navbar-collapse" id="metamenucollapse">
         <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" target="_blank" href="https://twitter.com/migcontrol"><i class="fab fa-twitter"></i></a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" aria-current="page" target="_blank" href="https://www.facebook.com/migcontrol"><i class="fab fa-facebook"></i></a>
-        </li>
-         <li class="nav-item">
-            {% slugurl_localized 'contact' as contact_url %}
-            <a class="nav-link{% if page.url == contact_url %} active{% endif %}" href="{{ contact_url }}">{% trans "Contact" %}</a>
-          </li>
-          <li class="nav-item">
-            {% slugurl_localized 'subscribe' as subscribe_url %}
-            <a class="nav-link{% if page.url == subscribe_url %} active{% endif %}" href="{{ subscribe_url }}">{% trans "Subscribe" %}</a>
-          </li>
-		   <li class="nav-item">
-            {% slugurl_localized 'donate' as donate_url %}
-            <a class="nav-link{% if page.url == donate_url %} active{% endif %}" href="{{ donate_url }}">{% trans "Donate" %}</a>
-          </li>
+			<li class="nav-item">
+				<a class="nav-link" aria-current="page" target="_blank" href="https://twitter.com/migcontrol"><i class="fab fa-twitter"></i></a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" aria-current="page" target="_blank" href="https://www.facebook.com/migcontrol"><i class="fab fa-facebook"></i></a>
+			</li>
+			<li class="nav-item">
+				{% slugurl_localized 'contact' as contact_url %}
+				<a class="nav-link{% if page.url == contact_url %} active{% endif %}" href="{{ contact_url }}">{% trans "Contact" %}</a>
+			</li>
+			<li class="nav-item">
+				{% slugurl_localized 'subscribe' as subscribe_url %}
+				<a class="nav-link{% if page.url == subscribe_url %} active{% endif %}" href="{{ subscribe_url }}">{% trans "Subscribe" %}</a>
+			</li>
+			<li class="nav-item">
+				{% slugurl_localized 'donate' as donate_url %}
+				<a class="nav-link{% if page.url == donate_url %} active{% endif %}" href="{{ donate_url }}">{% trans "Donate" %}</a>
+			</li>
         </ul>
-      </div>
+    </div>
     </div>
   </nav>
   <nav class="navbar navbar-expand-md navbar-dark bg-dark migcontrol-navbar-main">
     <div class="container-fluid">
 
-	  <a class="navbar-brand" href="/{{ LANGUAGE_CODE }}/">
-	    {% get_static_thumbnail "images/logo.png" "300x100" format="PNG" as im %}
-	    <img src="{{ im.url }}" alt="Migration Control Logo" class="img-fluid">
-    </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarCollapse">
+		<a class="navbar-brand" href="/{{ LANGUAGE_CODE }}/">
+			{% get_static_thumbnail "images/logo.png" "300x100" format="PNG" as im %}
+			<img src="{{ im.url }}" alt="Migration Control Logo" class="img-fluid">
+		</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+    <div class="collapse navbar-collapse" id="navbarCollapse">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            {% slugurl_localized 'about' as about_url %}
-            <a class="nav-link{% if page.url == about_url %} active{% endif %}" href="{{ about_url }}">{% trans "About" %}</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">{% trans "Wiki" %}</a>
-          </li>
-          <li class="nav-item">
-            {% slugurl_localized 'blog' as blog_url %}
-            <a class="nav-link{% if page.url == blog_url %} active{% endif %}" href="{{ blog_url }}">{% trans "Blog" %}</a>
-          </li>
-          <li class="nav-item">
-            {% slugurl_localized 'archive' as archive_url %}
-            <a class="nav-link{% if page.url == archive_url %} active{% endif %}" href="{{ archive_url }}">{% trans "Archive" %}</a>
-          </li>
+			<li class="nav-item">
+				{% slugurl_localized 'about' as about_url %}
+				<a class="nav-link{% if page.url == about_url %} active{% endif %}" href="{{ about_url }}">{% trans "About" %}</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="#">{% trans "Wiki" %}</a>
+			</li>
+			<li class="nav-item">
+				{% slugurl_localized 'blog' as blog_url %}
+				<a class="nav-link{% if page.url == blog_url %} active{% endif %}" href="{{ blog_url }}">{% trans "Blog" %}</a>
+			</li>
+			<li class="nav-item">
+				{% slugurl_localized 'archive' as archive_url %}
+				<a class="nav-link{% if page.url == archive_url %} active{% endif %}" href="{{ archive_url }}">{% trans "Archive" %}</a>
+			</li>
         </ul>
         <form class="search-form d-flex" action="{% url 'search' %}" method="GET">
-          <input name="query" class="form-control me-2" type="search" placeholder="{% trans "Search" %}" aria-label="Search">
-         <button class="btn btn-success" type="submit"><span class="fa fa-search"></span></button>
+			<input name="query" class="form-control me-2" type="search" placeholder="{% trans "Search" %}" aria-label="Search">
+			<button class="btn btn-success" type="submit"><span class="fa fa-search"></span></button>
         </form>
       </div>
     </div>
   </nav>
   {% block before_content %}{% endblock %}
-  <div class="container">
-  <div class="row">
-    <div class="col-md-12 migcontrol-contents-container">
-    {% block content %}{% endblock %}
-    </div>
-    <div class="col-md-4 migcontrol-contents-sidebar">
-    {% block sidebar %}{% endblock %}
-    </div>
-  </div>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-12 migcontrol-contents-container">
+				{% block content %}{% endblock %}
+			</div>
+			<div class="col-md-4 migcontrol-contents-sidebar">
+				{% block sidebar %}{% endblock %}
+			</div>
+		</div>
   </div>
   <div class="hero">
     <div class="container mb-5">
