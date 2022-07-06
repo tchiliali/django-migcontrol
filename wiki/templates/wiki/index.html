@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h1 class="migcontrol-page-title">{{ page.title }}</h1>
+
+On this page, we'll list all the entries of the archive by their language
+
+<ul>
+{% for wiki_page in wiki_pages %}
+  <li><a href="{{ wiki_page.url }}">{{ wiki_page.title }}</a></li>
+{% endfor %}
+</ul>
+
+{% endblock content %}
