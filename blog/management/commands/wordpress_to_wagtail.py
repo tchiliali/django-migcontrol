@@ -728,7 +728,7 @@ class Command(BaseCommand):
 
         header_image = None
         featured_image = kwargs.get("featured_image", None)
-        if featured_image is not None:
+        if not new_entry.header_image and featured_image is not None:
             source = featured_image["source"]
             __, file_ = os.path.split(source)
             source = source.replace("stage.swoon", "swoon")
@@ -746,7 +746,7 @@ class Command(BaseCommand):
             except UnicodeEncodeError:
                 print("unable to set header image {}".format(source))
 
-        else:
+        elif not new_entry.header_image:
             api_url = urllib.parse.urljoin(
                 self.wordpress_base_url, f"wp-json/wp/v2/posts/{post_id}?_embed"
             )
@@ -785,9 +785,12 @@ class Command(BaseCommand):
             except urllib.error.HTTPError:
                 print(f"Error fetching {api_url}")
 
-        print("Setting header image to: {}".format(header_image))
-        new_entry.header_image = header_image
-        new_entry.save()
+        if not new_entry.header_image:
+            print("Setting header image to: {}".format(header_image))
+            new_entry.header_image = header_image
+            new_entry.save()
+        else:
+            print("Header image already exists")
         wp_url = urllib.parse.urljoin(self.wordpress_base_url, slug)
         try:
             wp_mapping = WordpressMapping.objects.get(
