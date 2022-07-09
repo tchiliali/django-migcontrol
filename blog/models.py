@@ -36,7 +36,7 @@ from wagtail.search import index
 from wagtail.snippets.models import register_snippet
 
 from home.models import ArticleBase
-from migcontrol.utils import toc
+from migcontrol.utils import get_toc
 
 # from django.utils.translation import ugettext_lazy as _
 
@@ -323,14 +323,7 @@ class BlogPage(Page):
         """
         [(name, [*children])]
         """
-        html = self.get_body()
-        soup = BeautifulSoup(html, "html5lib")
-        # Need to build this in a list, otherwise evaluating whether it is
-        # empty or not causes problems in templates
-        return_list = []
-        for element, children in toc(soup.find_all(["h1", "h2", "h3", "h4", "h5"])):
-            return_list.append((element, children))
-        return return_list
+        return get_toc(self.get_body())
 
     def save_revision(self, *args, **kwargs):
         return super(BlogPage, self).save_revision(*args, **kwargs)

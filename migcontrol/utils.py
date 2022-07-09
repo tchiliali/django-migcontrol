@@ -1,3 +1,6 @@
+from bs4 import BeautifulSoup
+
+
 def until_next_outer(lst, h_tag):
     for element in lst:
         if element.name > h_tag:
@@ -36,3 +39,16 @@ def toc(lst):
             siblings.append((item.text, toc(children_list)))
 
     return siblings
+
+
+def get_toc(body):
+    """
+    [(name, [*children])]
+    """
+    soup = BeautifulSoup(body, "html5lib")
+    # Need to build this in a list, otherwise evaluating whether it is
+    # empty or not causes problems in templates
+    return_list = []
+    for element, children in toc(soup.find_all(["h1", "h2", "h3", "h4", "h5"])):
+        return_list.append((element, children))
+    return return_list

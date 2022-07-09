@@ -7,6 +7,7 @@ from django.db import migrations
 def forwards_func(apps, schema_editor):
     # We get the model from the versioned app registry;
     # if we directly import it, it'll be the wrong version
+    return
     Image = apps.get_model("wagtailimages", "Image")
     CustomImage = apps.get_model("images", "CustomImage")
     CustomRendition = apps.get_model("images", "CustomRendition")
