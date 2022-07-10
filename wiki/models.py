@@ -1,3 +1,5 @@
+import re
+
 from bs4 import BeautifulSoup
 from django.db import models
 from django.template.defaultfilters import slugify
@@ -104,5 +106,30 @@ class WikiPage(Page):
 
         for element in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
             element["id"] = "header-" + slugify(element.text)
+
+        textNodes = soup.findAll(text=True)
+        wiki_link = re.compile(r"^[A-Z].+")
+        for textNode in textNodes:
+            new_text = str(textNode)
+            replacements_made = False
+            replaced_words = [self.title]
+            for word in new_text.split():
+                if word not in replaced_words and wiki_link.match(word):
+                    try:
+                        page = WikiPage.objects.get(title=word, locale=self.locale)
+                        replacements_made = True
+                        replaced_words.append(word)
+                        new_text = new_text.replace(
+                            word,
+                            """<a href="{}">{}</a>""".format(
+                                page.url,
+                                word,
+                            ),
+                        )
+                    except WikiPage.DoesNotExist:
+                        pass
+
+            if replacements_made:
+                textNode.replaceWith(BeautifulSoup(new_text, "html5lib"))
 
         return str(soup)
