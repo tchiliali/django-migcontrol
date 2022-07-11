@@ -214,6 +214,9 @@ def get_wiki_page_mapping(
         locale = Locale.objects.get(language_code=url_parts[1])
     else:
         locale = Locale.objects.get(language_code="de")
+
+    print("Got locale for wiki page: {}".format(locale))
+
     return {
         "title": title,
         "slug": slug,
@@ -676,6 +679,7 @@ class Command(BaseCommand):
                 else:
                     translation.activate(self.locale)
             print(f"Creating page '{title}'")
+
             page = self.create_page(
                 self.index_page,
                 locale,
@@ -734,26 +738,40 @@ class Command(BaseCommand):
             ).items():
                 setattr(new_entry, k, v)
         except self.PostModel.DoesNotExist:
-            new_entry = index.add_child(
-                instance=self.PostModel(
-                    **self.mappings(
-                        index,
-                        locale,
-                        post_id,
-                        published,
-                        title,
-                        date,
-                        slug,
-                        body,
-                        excerpt,
-                        user,
-                        authors,
-                        meta,
-                        origin_url,
-                    ),
-                    **kwargs,
-                )
+
+            mappings = self.mappings(
+                index,
+                locale,
+                post_id,
+                published,
+                title,
+                date,
+                slug,
+                body,
+                excerpt,
+                user,
+                authors,
+                meta,
+                origin_url,
             )
+
+            if mappings.get("locale") != locale:
+                index = index._meta.model.objects.get(
+                    slug=index.slug, locale=mappings.get("locale")
+                )
+                print("Changed to index: {} {}".format(index, index.locale))
+
+            try:
+                new_entry = index.add_child(
+                    instance=self.PostModel(
+                        **mappings,
+                        **kwargs,
+                    )
+                )
+            except Exception as e:
+                print(e)
+                print("What")
+                return
 
         new_entry.country = []
         for key, value in meta.items():
