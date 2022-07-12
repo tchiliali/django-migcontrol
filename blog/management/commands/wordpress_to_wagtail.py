@@ -509,6 +509,17 @@ class Command(BaseCommand):
             new_body += line
         return new_body
 
+    def create_footnotes_from_mfn_tags(self, body, page):
+
+        mfn_p = re.compile(r"\[mfn\](.+?)\[\/mfn\]", re.M | re.DOTALL)
+        mfns = mfn_p.findall(body)
+        if not mfns:
+            return body
+        print("Found footnotes in {}!".format(page))
+        for mfn in mfns:
+            print(mfn)
+        return body
+
     def create_user(self, author):
         username = author["username"]
         first_name = author["first_name"]
@@ -597,6 +608,9 @@ class Command(BaseCommand):
         for post in posts:
             post_id = post.get("ID")
             title = post.get("title")
+
+            print("\n\nNow processing: {}, wp post id={}\n".format(title, post_id))
+
             if title:
                 new_title = self.convert_html_entities(title)
                 title = new_title
@@ -698,6 +712,7 @@ class Command(BaseCommand):
             )
 
             self.create_categories_and_tags(page, categories)
+            body = self.create_footnotes_from_mfn_tags(body, page)
 
             translation.activate(restore_locale)
 
