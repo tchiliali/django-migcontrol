@@ -18,6 +18,8 @@
 
 {{ page.get_body|safe }}
 
+{% include "wagtail_footnotes/includes/footnotes.html" %}
+
 <p>
   <a href="{{ page.get_parent.url }}" class="btn btn-outline-primary"><i class="fa fa-angle-double-left"></i> {% trans "Back to index" %}</a>
 </p>

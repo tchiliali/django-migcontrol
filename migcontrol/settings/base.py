@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "wagtail.contrib.sitemaps",
     "wagtail.contrib.styleguide",
     "wagtail_localize",
+    "wagtail_footnotes",
     # "wagtail_localize.locales",
     "wagtail.locales",
     "sorl.thumbnail",

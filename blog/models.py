@@ -34,6 +34,7 @@ from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.search import index
 from wagtail.snippets.models import register_snippet
+from wagtail_footnotes.blocks import RichTextBlockWithFootnotes
 
 from home.models import ArticleBase
 from migcontrol.utils import get_toc
@@ -230,11 +231,13 @@ class BlogTag(Tag):
 
 
 class BlogPage(Page):
-    body_richtext = RichTextField(verbose_name=("body (HTML)"), blank=True)
+    body_richtext = RichTextField(
+        verbose_name=("body (HTML)"), blank=True, features=["footnotes"]
+    )
     body_mixed = StreamField(
         [
             ("heading", blocks.CharBlock(classname="full title")),
-            ("paragraph", blocks.RichTextBlock()),
+            ("paragraph", RichTextBlockWithFootnotes()),
             ("image", ImageChooserBlock()),
         ],
         verbose_name="body (mixed)",

@@ -6,6 +6,7 @@ from django.template.defaultfilters import slugify
 from django.utils.translation import gettext_lazy as _
 from django_countries.fields import CountryField
 from wagtail.admin.edit_handlers import FieldPanel
+from wagtail.admin.edit_handlers import InlinePanel
 from wagtail.admin.edit_handlers import StreamFieldPanel
 from wagtail.core import blocks
 from wagtail.core.fields import RichTextField
@@ -74,7 +75,7 @@ class WikiPage(Page):
         verbose_name=("Header image"),
     )
 
-    description = RichTextField()
+    description = RichTextField(features=["footnotes"])
 
     def get_display_country(self):
         return ", ".join(map(lambda c: c.name, self.country))
@@ -83,6 +84,7 @@ class WikiPage(Page):
         FieldPanel("country"),
         FieldPanel("short_description"),
         FieldPanel("description"),
+        InlinePanel("footnotes", label="Footnotes"),
     ]
 
     def get_toc(self):
