@@ -232,7 +232,31 @@ class BlogTag(Tag):
 
 class BlogPage(Page):
     body_richtext = RichTextField(
-        verbose_name=("body (HTML)"), blank=True, features=["footnotes"]
+        verbose_name=("body (HTML)"),
+        blank=True,
+        features=[
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+            "bold",
+            "italic",
+            "ol",
+            "ul",
+            "hr",
+            "link",
+            "document-link",
+            "image",
+            "embed",
+            "footnotes",
+            "code",
+            "superscript",
+            "subscript",
+            "strikethrough",
+            "blockquote",
+        ],
     )
     body_mixed = StreamField(
         [

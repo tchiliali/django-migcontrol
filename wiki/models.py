@@ -75,7 +75,31 @@ class WikiPage(Page):
         verbose_name=("Header image"),
     )
 
-    description = RichTextField(features=["footnotes"])
+    description = RichTextField(
+        features=[
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+            "bold",
+            "italic",
+            "ol",
+            "ul",
+            "hr",
+            "link",
+            "document-link",
+            "image",
+            "embed",
+            "footnotes",
+            "code",
+            "superscript",
+            "subscript",
+            "strikethrough",
+            "blockquote",
+        ]
+    )
 
     def get_display_country(self):
         return ", ".join(map(lambda c: c.name, self.country))
