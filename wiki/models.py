@@ -116,20 +116,27 @@ class WikiPage(Page):
             replacements_made = False
             replaced_words = [self.title]
             for word in new_text.split():
-                if word not in replaced_words and wiki_link.match(word):
-                    try:
-                        page = WikiPage.objects.get(title=word, locale=self.locale)
-                        replacements_made = True
-                        replaced_words.append(word)
-                        new_text = new_text.replace(
+                if (
+                    len(word) > 4
+                    and word not in replaced_words
+                    and wiki_link.match(word)
+                ):
+                    # We just choose the first match because it's legal in the
+                    # database to have two wiki pages with the same title.
+                    page = WikiPage.objects.filter(
+                        title=word, locale=self.locale
+                    ).first()
+                    if not page:
+                        continue
+                    replacements_made = True
+                    replaced_words.append(word)
+                    new_text = new_text.replace(
+                        word,
+                        """<a href="{}">{}</a>""".format(
+                            page.url,
                             word,
-                            """<a href="{}">{}</a>""".format(
-                                page.url,
-                                word,
-                            ),
-                        )
-                    except WikiPage.DoesNotExist:
-                        pass
+                        ),
+                    )
 
             if replacements_made:
                 textNode.replaceWith(BeautifulSoup(new_text, "html5lib"))

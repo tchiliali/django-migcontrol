@@ -3,6 +3,7 @@ import os
 import re
 import urllib.request
 import uuid
+from uuid import uuid4
 
 import bleach
 from bleach.sanitizer import ALLOWED_TAGS
@@ -16,12 +17,14 @@ from django.db import transaction
 from django.db.models import Q
 from django.template.defaultfilters import striptags
 from django.template.defaultfilters import truncatechars
+from django.template.defaultfilters import urlize
 from django.utils import translation
 from django.utils.html import linebreaks
 from django.utils.text import slugify
 from PIL import Image as PILImage
 from wagtail.core.models import Locale
 from wagtail.images import get_image_model
+from wagtail_footnotes.models import Footnote
 
 from archive.models import ArchivePageLocation
 from archive.models import LocationPage
@@ -512,12 +515,27 @@ class Command(BaseCommand):
     def create_footnotes_from_mfn_tags(self, body, page):
 
         mfn_p = re.compile(r"\[mfn\](.+?)\[\/mfn\]", re.M | re.DOTALL)
-        mfns = mfn_p.findall(body)
+        mfns = mfn_p.finditer(body)
         if not mfns:
             return body
         print("Found footnotes in {}!".format(page))
         for mfn in mfns:
-            print(mfn)
+            try:
+                footnote = Footnote.objects.get(
+                    page=page,
+                    text=urlize(mfn.group(1)),
+                )
+            except Footnote.DoesNotExist:
+                footnote = Footnote.objects.create(
+                    page=page, text=urlize(mfn.group(1)), uuid=uuid4()
+                )
+            body = body.replace(
+                mfn.group(0),
+                """<footnote id="{}">[{}]</footnote>""".format(
+                    footnote.uuid,
+                    str(footnote.uuid)[:6],
+                ),
+            )
         return body
 
     def create_user(self, author):
