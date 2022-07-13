@@ -199,6 +199,7 @@ class XML_parser(object):
         )
         ret_dict["ID"] = item_dict["{wp}post_id"]
         ret_dict["title"] = item_dict["title"]
+        ret_dict["origin_url"] = item_dict["link"]
         ret_dict["description"] = item_dict["description"]
         ret_dict["content"] = item_dict["{content}encoded"]
         ret_dict["attachment_url"] = item_dict.get("{wp}attachment_url")

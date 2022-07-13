@@ -3,6 +3,7 @@ import os
 import re
 import urllib.request
 import uuid
+from uuid import uuid4
 
 import bleach
 from bleach.sanitizer import ALLOWED_TAGS
@@ -16,12 +17,14 @@ from django.db import transaction
 from django.db.models import Q
 from django.template.defaultfilters import striptags
 from django.template.defaultfilters import truncatechars
+from django.template.defaultfilters import urlize
 from django.utils import translation
 from django.utils.html import linebreaks
 from django.utils.text import slugify
 from PIL import Image as PILImage
 from wagtail.core.models import Locale
 from wagtail.images import get_image_model
+from wagtail_footnotes.models import Footnote
 
 from archive.models import ArchivePageLocation
 from archive.models import LocationPage
@@ -161,6 +164,7 @@ WP_POSTMETA_MAPPING = {
         "kurztext": ("short_description", noop_mapping),
     },
     "blog.blogpage": {},
+    "wiki.wikipage": {},
 }
 
 
@@ -177,7 +181,45 @@ def get_archive_page_mapping(
     user,
     authors,
     meta,
+    origin_url,
 ):
+    return {
+        "title": title,
+        "slug": slug,
+        "search_description": excerpt,
+        "owner": user,
+        # "authors": authors,
+        "description": body,
+        "locale": locale,
+        "live": published,
+    }
+
+
+def get_wiki_page_mapping(
+    index,
+    locale,
+    post_id,
+    published,
+    title,
+    date,
+    slug,
+    body,
+    excerpt,
+    user,
+    authors,
+    meta,
+    origin_url,
+):
+    origin_url = origin_url.strip("http://")
+    origin_url = origin_url.strip("https://")
+    url_parts = origin_url.split("/")
+    if url_parts[1] in ("en", "fr", "ar"):
+        locale = Locale.objects.get(language_code=url_parts[1])
+    else:
+        locale = Locale.objects.get(language_code="de")
+
+    print("Got locale for wiki page: {}".format(locale))
+
     return {
         "title": title,
         "slug": slug,
@@ -203,6 +245,7 @@ def get_blog_page_mapping(
     user,
     authors,
     meta,
+    origin_url,
 ):
 
     # Clean up UPPERCASE h1 and h2s in blog posts
@@ -231,6 +274,7 @@ def get_blog_page_mapping(
 WP_POST_MAPPING = {
     "archive.archivepage": get_archive_page_mapping,
     "blog.blogpage": get_blog_page_mapping,
+    "wiki.wikipage": get_wiki_page_mapping,
 }
 
 
@@ -468,6 +512,32 @@ class Command(BaseCommand):
             new_body += line
         return new_body
 
+    def create_footnotes_from_mfn_tags(self, body, page):
+
+        mfn_p = re.compile(r"\[mfn\](.+?)\[\/mfn\]", re.M | re.DOTALL)
+        mfns = mfn_p.finditer(body)
+        if not mfns:
+            return body
+        print("Found footnotes in {}!".format(page))
+        for mfn in mfns:
+            try:
+                footnote = Footnote.objects.get(
+                    page=page,
+                    text=urlize(mfn.group(1)),
+                )
+            except Footnote.DoesNotExist:
+                footnote = Footnote.objects.create(
+                    page=page, text=urlize(mfn.group(1)), uuid=uuid4()
+                )
+            body = body.replace(
+                mfn.group(0),
+                """<footnote id="{}">[{}]</footnote>""".format(
+                    footnote.uuid,
+                    str(footnote.uuid)[:6],
+                ),
+            )
+        return body
+
     def create_user(self, author):
         username = author["username"]
         first_name = author["first_name"]
@@ -556,10 +626,16 @@ class Command(BaseCommand):
         for post in posts:
             post_id = post.get("ID")
             title = post.get("title")
+
+            print("\n\nNow processing: {}, wp post id={}\n".format(title, post_id))
+
             if title:
                 new_title = self.convert_html_entities(title)
                 title = new_title
             slug = slugify(post.get("slug"))
+            if not slug:
+                print("NO SLUG FOR POST WITH ID {}".format(post_id))
+                continue
             description = post.get("description")
             if description:
                 description = self.convert_html_entities(description)
@@ -593,7 +669,7 @@ class Command(BaseCommand):
             # We don't have any proper values for authors, just use creator
             authors = post.get("creator").get("username")
             user = self.create_user(post.get("creator"))
-            categories = post.get("terms").get("category")
+            categories = post.get("terms").get("category") or []
             if categories:
                 for cat_dict in categories:
                     if "en" in cat_dict:
@@ -635,6 +711,7 @@ class Command(BaseCommand):
                 else:
                     translation.activate(self.locale)
             print(f"Creating page '{title}'")
+
             page = self.create_page(
                 self.index_page,
                 locale,
@@ -648,10 +725,12 @@ class Command(BaseCommand):
                 user,
                 authors,
                 post.get("meta"),
+                post.get("origin_url"),
                 **post_model_kwargs,
             )
 
             self.create_categories_and_tags(page, categories)
+            body = self.create_footnotes_from_mfn_tags(body, page)
 
             translation.activate(restore_locale)
 
@@ -669,6 +748,7 @@ class Command(BaseCommand):
         user,
         authors,
         meta,
+        origin_url,
         **kwargs,
     ):
 
@@ -687,28 +767,44 @@ class Command(BaseCommand):
                 user,
                 authors,
                 meta,
+                origin_url,
             ).items():
                 setattr(new_entry, k, v)
         except self.PostModel.DoesNotExist:
-            new_entry = index.add_child(
-                instance=self.PostModel(
-                    **self.mappings(
-                        index,
-                        locale,
-                        post_id,
-                        published,
-                        title,
-                        date,
-                        slug,
-                        body,
-                        excerpt,
-                        user,
-                        authors,
-                        meta,
-                    ),
-                    **kwargs,
-                )
+
+            mappings = self.mappings(
+                index,
+                locale,
+                post_id,
+                published,
+                title,
+                date,
+                slug,
+                body,
+                excerpt,
+                user,
+                authors,
+                meta,
+                origin_url,
             )
+
+            if mappings.get("locale") != locale:
+                index = index._meta.model.objects.get(
+                    slug=index.slug, locale=mappings.get("locale")
+                )
+                print("Changed to index: {} {}".format(index, index.locale))
+
+            try:
+                new_entry = index.add_child(
+                    instance=self.PostModel(
+                        **mappings,
+                        **kwargs,
+                    )
+                )
+            except Exception as e:
+                print(e)
+                print("What")
+                return
 
         new_entry.country = []
         for key, value in meta.items():

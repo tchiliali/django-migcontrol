@@ -34,9 +34,10 @@ from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.search import index
 from wagtail.snippets.models import register_snippet
+from wagtail_footnotes.blocks import RichTextBlockWithFootnotes
 
 from home.models import ArticleBase
-from migcontrol.utils import toc
+from migcontrol.utils import get_toc
 
 # from django.utils.translation import ugettext_lazy as _
 
@@ -230,11 +231,13 @@ class BlogTag(Tag):
 
 
 class BlogPage(Page):
-    body_richtext = RichTextField(verbose_name=("body (HTML)"), blank=True)
+    body_richtext = RichTextField(
+        verbose_name=("body (HTML)"), blank=True, features=["footnotes"]
+    )
     body_mixed = StreamField(
         [
             ("heading", blocks.CharBlock(classname="full title")),
-            ("paragraph", blocks.RichTextBlock()),
+            ("paragraph", RichTextBlockWithFootnotes()),
             ("image", ImageChooserBlock()),
         ],
         verbose_name="body (mixed)",
@@ -323,14 +326,7 @@ class BlogPage(Page):
         """
         [(name, [*children])]
         """
-        html = self.get_body()
-        soup = BeautifulSoup(html, "html5lib")
-        # Need to build this in a list, otherwise evaluating whether it is
-        # empty or not causes problems in templates
-        return_list = []
-        for element, children in toc(soup.find_all(["h1", "h2", "h3", "h4", "h5"])):
-            return_list.append((element, children))
-        return return_list
+        return get_toc(self.get_body())
 
     def save_revision(self, *args, **kwargs):
         return super(BlogPage, self).save_revision(*args, **kwargs)

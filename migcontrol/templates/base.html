@@ -99,9 +99,6 @@
             <a class="nav-link{% if page.url == nav.url %} active{% endif %}" href="{{ nav.url }}">{{ nav.title }}</a>
           </li>
           {% endfor %}
-          <li class="nav-item">
-            <a class="nav-link" href="#">{% trans "Wiki" %}</a>
-          </li>
         </ul>
 
         <form class="search-form d-flex" action="{% url 'search' %}" method="GET">

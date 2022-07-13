@@ -1,7 +1,8 @@
 {% extends "base.html" %}
+{% load i18n %}
+{% load static %}
 {% load wagtailcore_tags %}
 {% load wagtailimages_tags %}
-{% load static %}
 
 {% block before_content %}
   {% if self.header_image %}
@@ -12,9 +13,20 @@
 {% endblock %}
 
 {% block content %}
-    {% include 'blog/blog_post.html' with blog=self %}
-    {% include "wagtail_footnotes/includes/footnotes.html" %}
-{% endblock %}
+
+<h1 class="migcontrol-page-title">{{ page.title }}</h1>
+
+{{ page.get_body|safe }}
+
+{% with page.localized as page %}
+
+{% endwith %}
+
+<p>
+  <a href="{{ page.get_parent.url }}" class="btn btn-outline-primary"><i class="fa fa-angle-double-left"></i> {% trans "Back to index" %}</a>
+</p>
+
+{% endblock content %}
 
 {% block sidebar %}
 {% with self.get_toc as toc %}
