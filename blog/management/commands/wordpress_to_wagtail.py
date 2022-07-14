@@ -277,6 +277,13 @@ WP_POST_MAPPING = {
     "wiki.wikipage": get_wiki_page_mapping,
 }
 
+# Model field name to store the imported body (unfortynately varies)
+WP_HTML_BODY_FIELD = {
+    "archive.archivepage": "description",
+    "blog.blogpage": "body_richtext",
+    "wiki.wikipage": "description",
+}
+
 
 class Command(BaseCommand):
     """
@@ -334,12 +341,12 @@ class Command(BaseCommand):
         self.wagtail_locale = options.get("use_wagtail_locale", False)
         self.create_other_locales = options.get("create_other_locales", False)
         self.wordpress_base_url = options["wp_base_url"]
-        self.meta_mappings = WP_POSTMETA_MAPPING.get(
-            "{}.{}".format(options["app"].lower(), options["post_model"].lower()), {}
+        model_django_dot_path = "{}.{}".format(
+            options["app"].lower(), options["post_model"].lower()
         )
-        self.mappings = WP_POST_MAPPING.get(
-            "{}.{}".format(options["app"].lower(), options["post_model"].lower()), {}
-        )
+        self.meta_mappings = WP_POSTMETA_MAPPING.get(model_django_dot_path, {})
+        self.body_field_name = WP_HTML_BODY_FIELD[model_django_dot_path]
+        self.mappings = WP_POST_MAPPING.get(model_django_dot_path, {})
         try:
             self.index_page = self.IndexModel.objects.get(
                 Q(locale__language_code__iexact=self.locale)
@@ -358,6 +365,9 @@ class Command(BaseCommand):
         posts = self.xml_parser.get_posts_data()
 
         self.create_blog_pages(posts, self.index_page)
+
+    def get_body_attr_name(self):
+        return self.mappings.get()
 
     def prepare_url(self, url):
         if url.startswith("//"):
@@ -512,8 +522,8 @@ class Command(BaseCommand):
             new_body += line
         return new_body
 
-    def create_footnotes_from_mfn_tags(self, body, page):
-
+    def create_footnotes_from_mfn_tags(self, page):
+        body = page.get_body()
         mfn_p = re.compile(r"\[mfn\](.+?)\[\/mfn\]", re.M | re.DOTALL)
         mfns = mfn_p.finditer(body)
         if not mfns:
@@ -536,7 +546,8 @@ class Command(BaseCommand):
                     str(footnote.uuid)[:6],
                 ),
             )
-        return body
+        setattr(page, self.body_field_name, body)
+        page.save()
 
     def create_user(self, author):
         username = author["username"]
@@ -730,7 +741,7 @@ class Command(BaseCommand):
             )
 
             self.create_categories_and_tags(page, categories)
-            body = self.create_footnotes_from_mfn_tags(body, page)
+            self.create_footnotes_from_mfn_tags(page)
 
             translation.activate(restore_locale)
 
