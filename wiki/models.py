@@ -119,7 +119,7 @@ class WikiPage(Page):
         """
         return get_toc(self.get_body())
 
-    def get_body(self):
+    def get_body(self):  # noqa: max-complexity=11
         body = richtext(self.description)
 
         # Now let's add some id=... attributes to all h{1,2,3,4,5}
@@ -165,6 +165,11 @@ class WikiPage(Page):
                     )
 
             if replacements_made:
-                textNode.replaceWith(BeautifulSoup(new_text, "html5lib"))
+                node = BeautifulSoup(new_text, "html5lib")
+                for attr in ["head", "html", "body"]:
+                    if hasattr(node, attr):
+                        getattr(node, attr).unwrap()
+
+                textNode.replaceWith(node)
 
         return str(soup)
