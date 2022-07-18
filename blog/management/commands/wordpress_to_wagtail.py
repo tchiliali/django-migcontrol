@@ -604,7 +604,19 @@ class Command(BaseCommand):
         # BlogCategoryBlogPages(bcbp) for each category and BlogPageTag objects
         # for each tag for this blog page
         for category in categories_for_blog_entry:
-            BlogCategoryBlogPage.objects.get_or_create(category=category, page=page)[0]
+            try:
+                BlogCategoryBlogPage.objects.get_or_create(
+                    category=category, page=page
+                )[0]
+            except BlogCategoryBlogPage.MultipleObjectsReturned:
+                # It's unclear why this has occurred in production data, but
+                # duplicate relations are present. It might be due to duplicate
+                # form submissions in the wagtail interface.
+                for relation in BlogCategoryBlogPage.objects.filter(
+                    category=category, page=page
+                )[1:]:
+                    relation.delete()
+
         for tag in tags_for_blog_entry:
             BlogPageTag.objects.get_or_create(tag=tag, content_object=page)[0]
 
