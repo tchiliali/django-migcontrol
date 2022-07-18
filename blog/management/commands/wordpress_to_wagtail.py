@@ -185,7 +185,9 @@ def get_archive_page_mapping(
     return {
         "title": title,
         "slug": slug,
-        "search_description": excerpt,
+        # Not automatic mapping at the moment, we do it manually to check if
+        # search_description is already set
+        # "search_description": excerpt,
         "owner": user,
         # "authors": authors,
         "description": body,
@@ -222,7 +224,9 @@ def get_wiki_page_mapping(
     return {
         "title": title,
         "slug": slug,
-        "search_description": excerpt,
+        # Not automatic mapping at the moment, we do it manually to check if
+        # search_description is already set
+        # "search_description": excerpt,
         "owner": user,
         # "authors": authors,
         "description": body,
@@ -258,7 +262,9 @@ def get_blog_page_mapping(
     return {
         "title": title,
         "slug": slug,
-        "search_description": excerpt,
+        # Not automatic mapping at the moment, we do it manually to check if
+        # search_description is already set
+        # "search_description": excerpt,
         "date": date,
         "body_richtext": body,
         "owner": user,
@@ -830,6 +836,11 @@ class Command(BaseCommand):
                     self.meta_mappings[key][0],
                     value,
                 )
+
+        # Set values of fields that should only be set if they were empty
+        # before-hand, i.e. so they are not overwritten in an import
+        if not new_entry.search_description:
+            new_entry.search_description = excerpt
 
         if not new_entry.authors:
             new_entry.authors = authors
