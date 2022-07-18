@@ -17,7 +17,6 @@ from django.db import transaction
 from django.db.models import Q
 from django.template.defaultfilters import striptags
 from django.template.defaultfilters import truncatechars
-from django.template.defaultfilters import urlize
 from django.utils import translation
 from django.utils.html import linebreaks
 from django.utils.text import slugify
@@ -492,52 +491,55 @@ class Command(BaseCommand):
             img.replace_with(embed_img_soup)
             print("Replacing {} with {}".format(img, embed_img_soup))
 
-        new_body = ""
-        body = str(soup)
+        new_body = str(soup)
         re_caption = re.compile(
-            r"^(.*)\[caption\s+id\=\"attachment_(\d+)\".*\](\<(?:embed|img)[^\>]+\>)?(.+)\[/caption\](.*)$"
+            r"\[caption\s+id\=\"attachment_(\d+)\".*\][\n\s]*(\<(?:embed|img)[^\>]+\>)?[\n\s]*(.+?)[\n\s]*\[/caption\]",
+            re.M,
         )
-        for line in body.splitlines():
-            line = line.strip()
-            match_caption = re_caption.search(line)
-            if match_caption:
-                print(line)
-                self.has_captions = True
-                before = match_caption.group(1) or ""
-                image_id = match_caption.group(2)
-                img_tag = match_caption.group(3) or ""
-                print("putting img {}".format(img_tag))
-                caption = match_caption.group(4)
-                after = match_caption.group(5) or ""
-                line = before + img_tag + after
-                updates = Image.objects.filter(mappings__wp_post_id=image_id).update(
-                    caption=caption
-                )
-                print("Setting captions on {} images".format(updates))
-                if updates == 0:
-                    print("No mappings for post id: {}".format(image_id))
-            elif "[caption" in line:
-                raise Exception("Why no match!? {}".format(line))
 
-            new_body += line
+        for match in re_caption.finditer(new_body):
+            self.has_captions = True
+            image_id = match.group(1)
+            img_tag = match.group(2) or ""
+            print("putting img {}".format(img_tag))
+            caption = match.group(3)
+            replacement = img_tag
+            updates = Image.objects.filter(mappings__wp_post_id=image_id).update(
+                caption=caption
+            )
+            print("Setting captions on {} images".format(updates))
+
+            if updates == 0:
+                print("No mappings for post id: {}".format(image_id))
+
+            new_body = new_body.replace(match.group(0), replacement)
+
+        if "[caption" in new_body:
+            raise Exception(
+                "FOUND UNDETECTED '[caption' in body \n\n{}".format(new_body)
+            )
+
         return new_body
 
     def create_footnotes_from_mfn_tags(self, page):
         body = page.get_body()
-        mfn_p = re.compile(r"\[mfn\](.+?)\[\/mfn\]", re.M | re.DOTALL)
+        mfn_p = re.compile(r"\[mfn\](.+?)\[\/mfn\]", re.M)
         mfns = mfn_p.finditer(body)
         if not mfns:
             return body
         print("Found footnotes in {}!".format(page))
         for mfn in mfns:
+            footnote = bleach.clean(
+                mfn.group(1), tags=["em", "i", "a", "b", "strong"], strip=True
+            )
             try:
                 footnote = Footnote.objects.get(
                     page=page,
-                    text=urlize(mfn.group(1)),
+                    text=footnote,
                 )
             except Footnote.DoesNotExist:
                 footnote = Footnote.objects.create(
-                    page=page, text=urlize(mfn.group(1)), uuid=uuid4()
+                    page=page, text=mfn.group(1), uuid=uuid4()
                 )
             body = body.replace(
                 mfn.group(0),
@@ -612,7 +614,8 @@ class Command(BaseCommand):
         for element in soup.findAll(lambda tag: not tag.contents and tag.name == "p"):
             element.decompose()
 
-        body = str(soup)
+        # Clean up unclosed tags
+        body = soup.decode_contents()
         return bleach.clean(
             body,
             tags=ALLOWED_TAGS + ["p", "h1", "h2", "h3", "h4", "h5", "caption", "img"],
