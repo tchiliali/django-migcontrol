@@ -634,7 +634,7 @@ class Command(BaseCommand):
             element.decompose()
 
         # Clean up unclosed tags
-        new_body = tidy.parseString(body, wrap=0, force_output=True)
+        new_body = str(tidy.parseString(body, wrap=0, force_output=True))
         if not new_body:
             print("Could not parse HTML at all, must be some real garbage :)")
         return bleach.clean(
