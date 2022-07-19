@@ -1,5 +1,6 @@
 {% load wagtailcore_tags static %}
 {% load i18n %}
+{% load migcontrol_tags %}
 
 <h1 class="migcontrol-page-title">{{ blog.title }}</h1>
 
@@ -15,7 +16,7 @@
 
 
 <div class="blog-body">
-    {{ blog.get_body|safe }}
+    {% richtext_footnotes blog.get_body %}
 </div>
 
 
