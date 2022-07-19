@@ -23,6 +23,7 @@ from django.utils.html import linebreaks
 from django.utils.text import slugify
 from PIL import Image as PILImage
 from wagtail.core.models import Locale
+from wagtail.core.models import Page
 from wagtail.images import get_image_model
 from wagtail_footnotes.models import Footnote
 
@@ -786,48 +787,39 @@ class Command(BaseCommand):
         origin_url,
         **kwargs,
     ):
+        mappings = self.mappings(
+            index,
+            locale,
+            post_id,
+            published,
+            title,
+            date,
+            slug,
+            body,
+            excerpt,
+            user,
+            authors,
+            meta,
+            origin_url,
+        )
+
+        if mappings.get("locale") and mappings.get("locale") != locale:
+            locale = mappings.get("locale")
+            index = index._meta.model.objects.get(
+                slug=index.slug, locale=mappings.get("locale")
+            )
+            print("Changed to index: {} {}".format(index, index.locale))
 
         try:
-            new_entry = self.PostModel.objects.get(slug=slug)
-            for k, v in self.mappings(
-                index,
-                locale,
-                post_id,
-                published,
-                title,
-                date,
-                slug,
-                body,
-                excerpt,
-                user,
-                authors,
-                meta,
-                origin_url,
-            ).items():
-                setattr(new_entry, k, v)
-        except self.PostModel.DoesNotExist:
-
-            mappings = self.mappings(
-                index,
-                locale,
-                post_id,
-                published,
-                title,
-                date,
-                slug,
-                body,
-                excerpt,
-                user,
-                authors,
-                meta,
-                origin_url,
+            new_entry = (
+                index.get_children()
+                .exact_type(self.PostModel)
+                .specific()
+                .get(slug=slug)
             )
-
-            if mappings.get("locale") != locale:
-                index = index._meta.model.objects.get(
-                    slug=index.slug, locale=mappings.get("locale")
-                )
-                print("Changed to index: {} {}".format(index, index.locale))
+            for k, v in mappings.items():
+                setattr(new_entry, k, v)
+        except Page.DoesNotExist:
 
             try:
                 new_entry = index.add_child(
