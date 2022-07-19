@@ -6,6 +6,7 @@ import uuid
 from uuid import uuid4
 
 import bleach
+import tidy
 from bleach.sanitizer import ALLOWED_TAGS
 from bs4 import BeautifulSoup
 from django.apps import apps
@@ -633,9 +634,11 @@ class Command(BaseCommand):
             element.decompose()
 
         # Clean up unclosed tags
-        body = soup.decode_contents()
+        new_body = tidy.parseString(body, wrap=0, force_output=True)
+        if not new_body:
+            print("Could not parse HTML at all, must be some real garbage :)")
         return bleach.clean(
-            body,
+            new_body,
             tags=ALLOWED_TAGS + ["p", "h1", "h2", "h3", "h4", "h5", "caption", "img"],
             attributes=["href", "src", "alt"],
             strip=True,
