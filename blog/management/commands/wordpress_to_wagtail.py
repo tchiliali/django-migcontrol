@@ -23,6 +23,7 @@ from django.utils.html import linebreaks
 from django.utils.text import slugify
 from PIL import Image as PILImage
 from wagtail.core.models import Locale
+from wagtail.core.models import Page
 from wagtail.images import get_image_model
 from wagtail_footnotes.models import Footnote
 
@@ -810,10 +811,15 @@ class Command(BaseCommand):
             print("Changed to index: {} {}".format(index, index.locale))
 
         try:
-            new_entry = self.PostModel.objects.get(slug=slug, locale=locale)
+            new_entry = (
+                index.get_children()
+                .exact_type(self.PostModel)
+                .specific()
+                .get(slug=slug)
+            )
             for k, v in mappings.items():
                 setattr(new_entry, k, v)
-        except self.PostModel.DoesNotExist:
+        except Page.DoesNotExist:
 
             try:
                 new_entry = index.add_child(
