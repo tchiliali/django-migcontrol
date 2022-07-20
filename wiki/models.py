@@ -58,8 +58,6 @@ class WikiPage(Page):
         default="",
     )
 
-    short_description = models.TextField(blank=True, null=True)
-
     authors = models.CharField(
         blank=True,
         null=True,
@@ -108,8 +106,8 @@ class WikiPage(Page):
 
     content_panels = Page.content_panels + [
         FieldPanel("country"),
-        FieldPanel("short_description"),
         FieldPanel("description"),
+        FieldPanel("authors"),
         InlinePanel("footnotes", label="Footnotes"),
     ]
 

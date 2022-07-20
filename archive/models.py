@@ -93,8 +93,6 @@ class ArchivePage(Page):
         default="",
     )
 
-    short_description = models.TextField(blank=True, null=True)
-
     description = RichTextField()
 
     author = models.ForeignKey(
@@ -116,7 +114,6 @@ class ArchivePage(Page):
     content_panels = Page.content_panels + [
         FieldPanel("organization_type"),
         FieldPanel("country"),
-        FieldPanel("short_description"),
         FieldPanel("description"),
         InlinePanel("locations", label="locations"),
     ]

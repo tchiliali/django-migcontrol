@@ -162,7 +162,7 @@ WP_POSTMETA_MAPPING = {
         "branche": ("organization_type", noop_mapping),
         "land": ("country", get_country),
         "standorte": ("locations", get_locations),
-        "kurztext": ("short_description", noop_mapping),
+        "kurztext": ("search_description", noop_mapping),
     },
     "blog.blogpage": {},
     "wiki.wikipage": {},
