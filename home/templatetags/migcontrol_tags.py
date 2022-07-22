@@ -14,6 +14,18 @@ from wagtail.core.templatetags.wagtailcore_tags import pageurl
 register = template.Library()
 
 
+@register.simple_tag(takes_context=False)
+def page_url_localized_fallback(localized_page, target_language):
+    if (
+        localized_page.locale.language_code != target_language
+        and localized_page.get_parent()
+    ):
+        return page_url_localized_fallback(
+            localized_page.get_parent().localized, target_language
+        )
+    return localized_page.url
+
+
 @register.simple_tag(takes_context=True)
 def slugurl_localized(context, slug):
     """

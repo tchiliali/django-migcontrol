@@ -162,7 +162,7 @@ WP_POSTMETA_MAPPING = {
         "branche": ("organization_type", noop_mapping),
         "land": ("country", get_country),
         "standorte": ("locations", get_locations),
-        "kurztext": ("short_description", noop_mapping),
+        "kurztext": ("search_description", noop_mapping),
     },
     "blog.blogpage": {},
     "wiki.wikipage": {},
@@ -556,6 +556,8 @@ class Command(BaseCommand):
                     str(footnote.uuid)[:6],
                 ),
             )
+        if "[mfn]" in body:
+            raise Exception("Found remaining footnote tag in body {}".format(body))
         setattr(page, self.body_field_name, body)
         page.save()
 
@@ -669,6 +671,8 @@ class Command(BaseCommand):
                 new_title = self.convert_html_entities(title)
                 title = new_title
             slug = slugify(post.get("slug"))
+            if not slug:
+                slug = slugify(post.get("title"))
             if not slug:
                 print("NO SLUG FOR POST WITH ID {}".format(post_id))
                 continue
