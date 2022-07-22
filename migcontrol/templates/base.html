@@ -42,7 +42,7 @@
           {% get_language_info for language_code as lang %}
           {% language language_code %}
               <li>
-              <a class="{% if language_code == LANGUAGE_CODE %}active{% endif %}" href="{% if page %}{% localized_fallback page.localized language_code %}{% else %}/{{ language_code }}{% endif %}" rel="alternate" hreflang="{{ language_code }}" title="{{ language_name }}">
+              <a class="{% if language_code == LANGUAGE_CODE %}active{% endif %}" href="{% if page %}{% page_url_localized_fallback page.localized language_code %}{% else %}/{{ language_code }}{% endif %}" rel="alternate" hreflang="{{ language_code }}" title="{{ language_name }}">
                   {{ language_code }}
               </a>
               </li>

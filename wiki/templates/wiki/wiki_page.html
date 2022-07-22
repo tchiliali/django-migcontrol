@@ -16,6 +16,11 @@
 {% block content %}
 
 <h1 class="migcontrol-page-title">{{ page.title }}</h1>
+<p class="text-primary">
+{% if page.authors %}
+- {% trans "written by" %}: {{ page.authors|default:"" }}
+{% endif %}
+</p>
 
 {% richtext_footnotes page.get_body %}
 
