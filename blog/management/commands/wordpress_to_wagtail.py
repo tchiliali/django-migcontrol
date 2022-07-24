@@ -35,6 +35,7 @@ from blog.models import BlogPageTag
 from blog.models import BlogTag
 from blog.models import WordpressMapping
 from blog.wp_xml_parser import XML_parser
+from wiki.models import WikiPage
 
 try:
     import lxml  # noqa
@@ -647,6 +648,57 @@ class Command(BaseCommand):
             strip=True,
         )
 
+    def body_insert_wiki_links(self, page):
+        body = page.get_body()
+        soup = BeautifulSoup(body, "html5lib")
+
+        # Beautiful soup unfortunately adds some noise to the structure, so we
+        # remove this again - see:
+        # https://stackoverflow.com/questions/21452823/beautifulsoup-how-should-i-obtain-the-body-contents
+        for attr in ["head", "html", "body"]:
+            if hasattr(soup, attr):
+                getattr(soup, attr).unwrap()
+
+        textNodes = soup.findAll(text=True)
+        wiki_link = re.compile(r"^[A-Z].+")
+        for textNode in textNodes:
+            new_text = str(textNode)
+            replacements_made = False
+            replaced_words = [page.title]
+            for word in new_text.split():
+                if (
+                    len(word) > 4
+                    and word not in replaced_words
+                    and wiki_link.match(word)
+                ):
+                    # We just choose the first match because it's legal in the
+                    # database to have two wiki pages with the same title.
+                    wiki_page = WikiPage.objects.filter(
+                        title=word, locale=page.locale
+                    ).first()
+                    if not wiki_page:
+                        continue
+                    replacements_made = True
+                    replaced_words.append(word)
+                    new_text = new_text.replace(
+                        word,
+                        """<a linktype="page" id="{}">{}</a>""".format(
+                            wiki_page.id,
+                            word,
+                        ),
+                    )
+
+            if replacements_made:
+                node = BeautifulSoup(new_text, "html5lib")
+                for attr in ["head", "html", "body"]:
+                    if hasattr(node, attr):
+                        getattr(node, attr).unwrap()
+
+                textNode.replaceWith(node)
+
+        setattr(page, self.body_field_name, str(soup))
+        page.save()
+
     def clean_body_final(self, body):
         soup = BeautifulSoup(body, "html5lib")
         # Beautiful soup unfortunately adds some noise to the structure, so we
@@ -771,6 +823,7 @@ class Command(BaseCommand):
 
             self.create_categories_and_tags(page, categories)
             self.create_footnotes_from_mfn_tags(page)
+            self.body_insert_wiki_links(page)
 
             translation.activate(restore_locale)
 
