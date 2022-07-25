@@ -1,0 +1,7 @@
+FROM node:18-buster-slim
+RUN npm install -g rtlcss
+RUN npm install -g minify
+
+RUN mkdir /css
+
+CMD rtlcss /css/input.css /css/output.css && minify /css/output.css > /css/output.min.css

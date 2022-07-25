@@ -1,20 +1,47 @@
 {% extends "base.html" %}
-{% load wagtailmarkdown i18n %}
+{% load i18n %}
 {% load wagtailcore_tags static %}
 {% load wagtailimages_tags %}
 
+{% block sidebar %}
+  <h1>{{ page.title }}</h1>
+
+  <p>{% trans "Filter by language" %}</p>
+  <p>
+  {% for language_code, language_name in LANGUAGES %}
+      {% get_language_info for language_code as lang %}
+      {% language language_code %}
+        <a class="badge {% if locale.language_code == language_code %}bg-dark{% else %}bg-secondary{% endif %}" href="{% url "blog:locale" locale=language_code %}">
+          {{ language_name }}
+        </a>
+      {% endlanguage %}
+  {% endfor %}
+  </p>
+
+  <p>{% trans "Filter by category" %}</p>
+  <p>
+  {% for list_category in categories %}
+      <a class="badge rounded-pill {% if category == list_category %}bg-dark{% else %}bg-secondary{% endif %}" href="{% url "blog:category" category=list_category.slug %}">
+        {{ list_category.name }}
+      </a>
+  {% endfor %}
+  </p>
+
+  {% for block in page.body %}
+    {% include_block block %}
+  {% endfor %}
+{% endblock %}
+
 {% block content %}
     {% if category %}
-    <h1>{{ category }}</h1>
+    <h1 class="migcontrol-page-title">{{ category }}</h1>
     {% elif tag %}
-    <h1>Posts tagged with '{{ tag }}'</h1>
-    {% else %}
-    <h1>{% trans "Latest updates" %}</h1>
+    <h1 class="migcontrol-page-title">Posts tagged with '{{ tag }}'</h1>
     {% endif %}
 
     {% if blogs %}
 
-    <div class="row row-cols-1 row-cols-md-3 g-4">
+    <div class="row row-cols-1 row-cols-md-3 g-4 mt-4">
 
         {% for blog in blogs %}
           <div class="col">
@@ -23,14 +50,14 @@
             {% image blog.header_image fill-500x300 as tmp_photo %}
             <img class="card-img-top" src="{{ tmp_photo.url }}">
             {% else %}
-            <img class="card-img-top" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" style="width: 500px; height: 200px;">
+            <img class="card-img-top" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
             {% endif %}
             <div class="card-body">
               <h5 class="card-title">{{ blog.title }}</h5>
               <p class="card-text"><small class="text-muted">{{ blog.date|date:"F jS, Y" }}</small></p>
-              <p class="card-text">{{ blog.body_markdown|markdown|striptags|truncatewords_html:30 }}</p>
+              <p class="card-text">{{ blog.body_richtext|richtext|striptags|truncatewords_html:30 }}</p>
               <p class="card-text">
-                <a href="{% pageurl blog %}" class="btn btn-dark">{% trans "Read more" %}</a>
+                <a href="{% pageurl blog %}" class="btn btn-primary">{% trans "Read more" %}</a>
               </p>
             </div>
           </div>

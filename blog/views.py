@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.syndication.views import Feed
 from django.shortcuts import get_object_or_404
 from django.utils.feedgenerator import Atom1Feed
-from wagtailmarkdown.utils import render_markdown
+from wagtail.core.models.i18n import Locale
 
 from .models import BlogCategory
 from .models import BlogIndexPage
@@ -17,6 +17,12 @@ def tag_view(request, tag):
 def category_view(request, category):
     index = BlogIndexPage.objects.first()
     return index.serve(request, category=category)
+
+
+def locale_view(request, locale):
+    index = BlogIndexPage.objects.first()
+    locale = Locale.objects.get(language_code=locale)
+    return index.serve(request, locale=locale)
 
 
 def author_view(request, author):
@@ -52,8 +58,6 @@ class LatestEntriesFeed(Feed):
         return item.title
 
     def item_description(self, item):
-        if item.specific.body_markdown:
-            return render_markdown(item.specific.body_markdown)
         return item.specific.body_richtext
 
     def item_link(self, item):

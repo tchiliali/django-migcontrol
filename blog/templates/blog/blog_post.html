@@ -1,15 +1,16 @@
 {% load wagtailcore_tags static %}
-{% load wagtailmarkdown i18n %}
+{% load i18n %}
 
-<h1>{{ blog.title }}</h1>
+<h1 class="migcontrol-page-title">{{ blog.title }}</h1>
 
 {% if blog.date %}
-    <div class="page-meta">
+    <p class="text-primary">
+        <span class="fa fa-clock"></span>
         {{ blog.date|date:"F jS, Y" }}
-        {% if blog.author %}
-        {% trans "written by" %}: {{ blog.author|default:"" }}
+        {% if blog.authors %}
+        - {% trans "written by" %}: {{ blog.authors|default:"" }}
         {% endif %}
-    </div>
+    </p>
 {% endif %}
 
 
@@ -32,7 +33,7 @@
             Posted in
                 {% for cat in blog.categories.all %}
                     <a href="{% url 'blog:category' cat.category.slug %}">{{ cat.category.name }}</a>{% if not forloop.last %}, {% endif %}
-                {% endfor %} |
+                {% endfor %}
         {% endif %}
 
     </div>

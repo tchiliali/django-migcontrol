@@ -1,5 +1,8 @@
-.migcontrol-contents-container
+.migcontrol-contents-container, .migcontrol-contents-sidebar
 {
+    /* Floating images */
+    clear: after;
+
     p, blockquote, h1, h2, h3, h4, h5, ul, ol {
         max-width: 700px;
     }
@@ -16,12 +19,48 @@
         margin-top: 20px;
     }
 
+    h1.migcontrol-page-title {
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+
     .page-meta {
         font-style: italic;
     }
 
     .pagination {
         margin: 20px 0;
+    }
+
+    figure {
+        display: block;
+        &.bodytext-image img {
+            max-width: 100%;
+            height: auto;
+        }
+        &.small {
+            max-width: 33%;
+        }
+        &.right {
+            float: right;
+            margin: 10px 0 10px 10px;
+        }
+        &.left {
+            float: left;
+            margin: 10px 10px 10px 0;
+        }
+        @include media-breakpoint-down(sm) {
+            &.small {
+                max-width: 100%;
+            }
+            &.right {
+                float: none;
+            }
+            &.left {
+                float: none;
+            }
+        }
+
     }
 
 }
@@ -39,4 +78,8 @@
   display: table;
   height: 400px;
   width: 100%;
+}
+
+.btn-primary {
+    color: #FFF;
 }

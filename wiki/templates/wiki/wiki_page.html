@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load wagtailcore_tags %}
+{% load wagtailimages_tags %}
+{% load migcontrol_tags %}
+
+{% block before_content %}
+  {% if self.header_image %}
+  {% image self.header_image width-1680 as tmp_photo %}
+    <div class="container-image-background" style="background-image: url('{{ tmp_photo.url }}');">
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+
+<h1 class="migcontrol-page-title">{{ page.title }}</h1>
+
+{% richtext_footnotes page.get_body %}
+
+{% include "wagtail_footnotes/includes/footnotes.html" %}
+
+<p>
+  <a href="{{ page.get_parent.url }}" class="btn btn-outline-primary"><i class="fa fa-angle-double-left"></i> {% trans "Back to index" %}</a>
+</p>
+
+{% endblock content %}
+
+{% block sidebar %}
+{% with self.get_toc as toc %}
+{% if toc %}
+<nav id="contents-toc" class="navbar navbar-light bg-light flex-column align-items-stretch p-3 sticky-md-top my-3">
+  <a class="navbar-brand" href="#">Table of contents</a>
+  <nav class="nav nav-pills flex-column">
+  {% for section, children in toc %}
+      {% include "migcontrol/includes/toc_section.html" with section=section children=children %}
+  {% endfor %}
+  </nav>
+</nav>
+{% endif %}
+{% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
+  <script type="text/javascript" src="{% static 'js/toc.js' %}"></script>
+{% endblock %}

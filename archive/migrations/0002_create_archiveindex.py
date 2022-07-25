@@ -33,6 +33,7 @@ def create_archiveindex(apps, schema_editor):
             numchild=0,
             url_path=home.url_path + "archive/",
             live=True,
+            show_in_menus=True,
         )
 
         home.add_child(instance=archiveindex)

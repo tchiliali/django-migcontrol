@@ -45,7 +45,9 @@ INSTALLED_APPS = [
     "wagtail.contrib.sitemaps",
     "wagtail.contrib.styleguide",
     "wagtail_localize",
-    "wagtail_localize.locales",
+    "wagtail_footnotes",
+    # "wagtail_localize.locales",
+    "wagtail.locales",
     "sorl.thumbnail",
     "wagtailmarkdown",
     "modelcluster",
@@ -55,6 +57,8 @@ INSTALLED_APPS = [
     "home",
     "search",
     "archive",
+    "images",
+    "wiki",
 ]
 
 MIDDLEWARE = [
@@ -259,3 +263,5 @@ WAGTAILMARKDOWN = {
     # ...
     "autodownload_fontawesome": False,
 }
+
+WAGTAILIMAGES_IMAGE_MODEL = "images.CustomImage"

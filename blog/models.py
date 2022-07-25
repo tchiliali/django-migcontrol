@@ -10,11 +10,9 @@ from django.core.paginator import PageNotAnInteger
 from django.core.paginator import Paginator
 from django.db import models
 from django.db.models import Count
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.template.defaultfilters import slugify
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
 from modelcluster.fields import ParentalKey
 from modelcluster.tags import ClusterTaggableManager
 from taggit.models import Tag
@@ -26,6 +24,7 @@ from wagtail.admin.edit_handlers import MultiFieldPanel
 from wagtail.admin.edit_handlers import StreamFieldPanel
 from wagtail.core import blocks
 from wagtail.core import hooks
+from wagtail.core.fields import RichTextField
 from wagtail.core.fields import StreamField
 from wagtail.core.models import Page
 from wagtail.core.templatetags.wagtailcore_tags import richtext
@@ -35,12 +34,12 @@ from wagtail.images.blocks import ImageChooserBlock
 from wagtail.images.edit_handlers import ImageChooserPanel
 from wagtail.search import index
 from wagtail.snippets.models import register_snippet
-from wagtailmarkdown.blocks import MarkdownBlock
-from wagtailmarkdown.edit_handlers import MarkdownPanel
-from wagtailmarkdown.fields import MarkdownField
-from wagtailmarkdown.templatetags.wagtailmarkdown import markdown
+from wagtail_footnotes.blocks import RichTextBlockWithFootnotes
 
-from migcontrol.utils import toc
+from home.models import ArticleBase
+from migcontrol.utils import get_toc
+
+# from django.utils.translation import ugettext_lazy as _
 
 
 COMMENTS_APP = getattr(settings, "COMMENTS_APP", None)
@@ -71,13 +70,14 @@ def get_blog_context(context):
     return context
 
 
-class BlogIndexPage(Page):
+class BlogIndexPage(ArticleBase, Page):
     template = "blog/index.html"
 
     @property
     def blogs(self):
-        # Get list of blog pages that are descendants of this page
-        blogs = BlogPage.objects.descendant_of(self).live()
+        # Get list of blog pages that exist - we don't care which blog they
+        # belong to for now, as blogs are not language sensitive
+        blogs = BlogPage.objects.all().live()
         blogs = (
             blogs.order_by("-date")
             .select_related("owner")
@@ -90,7 +90,14 @@ class BlogIndexPage(Page):
         return blogs
 
     def get_context(  # noqa: max-complexity=14
-        self, request, tag=None, category=None, author=None, *args, **kwargs
+        self,
+        request,
+        tag=None,
+        category=None,
+        author=None,
+        locale=None,
+        *args,
+        **kwargs
     ):
         context = super(BlogIndexPage, self).get_context(request, *args, **kwargs)
         blogs = self.blogs
@@ -109,10 +116,9 @@ class BlogIndexPage(Page):
                 category = get_object_or_404(BlogCategory, slug=category)
             blogs = blogs.filter(categories__category__name=category)
         if author:
-            if isinstance(author, str) and not author.isdigit():
-                blogs = blogs.filter(author__username=author)
-            else:
-                blogs = blogs.filter(author_id=author)
+            blogs = blogs.filter(authors__icontains=author)
+        if locale:
+            blogs = blogs.filter(locale=locale)
 
         # Pagination
         page = request.GET.get("page")
@@ -131,6 +137,8 @@ class BlogIndexPage(Page):
 
         context["blogs"] = blogs
         context["category"] = category
+        context["locale"] = locale
+        context["categories"] = BlogCategory.objects.all()
         context["tag"] = tag
         context["author"] = author
         context["COMMENTS_APP"] = COMMENTS_APP
@@ -139,21 +147,21 @@ class BlogIndexPage(Page):
         return context
 
     class Meta:
-        verbose_name = _("Blog index")
+        verbose_name = "Blog index"
 
     subpage_types = ["blog.BlogPage"]
 
 
 @register_snippet
 class BlogCategory(models.Model):
-    name = models.CharField(max_length=80, unique=True, verbose_name=_("Category Name"))
+    name = models.CharField(max_length=80, verbose_name=("Category Name"))
     slug = models.SlugField(unique=True, max_length=80)
     parent = models.ForeignKey(
         "self",
         blank=True,
         null=True,
         related_name="children",
-        help_text=_(
+        help_text=(
             "Categories, unlike tags, can have a hierarchy. You might have a "
             "Jazz category, and under that have children categories for Bebop"
             " and Big Band. Totally optional."
@@ -164,8 +172,8 @@ class BlogCategory(models.Model):
 
     class Meta:
         ordering = ["name"]
-        verbose_name = _("Blog Category")
-        verbose_name_plural = _("Blog Categories")
+        verbose_name = "Blog Category"
+        verbose_name_plural = "Blog Categories"
 
     panels = [
         FieldPanel("name"),
@@ -198,7 +206,7 @@ class BlogCategoryBlogPage(models.Model):
     category = models.ForeignKey(
         BlogCategory,
         related_name="+",
-        verbose_name=_("Category"),
+        verbose_name=("Category"),
         on_delete=models.CASCADE,
     )
     page = ParentalKey("BlogPage", related_name="categories")
@@ -211,40 +219,50 @@ class BlogPageTag(TaggedItemBase):
     content_object = ParentalKey("BlogPage", related_name="tagged_items")
 
 
+def limit_author_choices():
+    """Legacy function to appease migration error."""
+    return None
+
+
 @register_snippet
 class BlogTag(Tag):
     class Meta:
         proxy = True
 
 
-def limit_author_choices():
-    """Limit choices in blog author field based on config settings"""
-    LIMIT_AUTHOR_CHOICES = getattr(settings, "BLOG_LIMIT_AUTHOR_CHOICES_GROUP", None)
-    if LIMIT_AUTHOR_CHOICES:
-        if isinstance(LIMIT_AUTHOR_CHOICES, str):
-            limit = Q(groups__name=LIMIT_AUTHOR_CHOICES)
-        else:
-            limit = Q()
-            for s in LIMIT_AUTHOR_CHOICES:
-                limit = limit | Q(groups__name=s)
-        if getattr(settings, "BLOG_LIMIT_AUTHOR_CHOICES_ADMIN", False):
-            limit = limit | Q(is_staff=True)
-    else:
-        limit = {"is_staff": True}
-    return limit
-
-
 class BlogPage(Page):
-    body_richtext = models.TextField(verbose_name=_("body (HTML)"), blank=True)
-    body_markdown = MarkdownField(
-        default="", verbose_name=_("body (Markdown)"), blank=True
+    body_richtext = RichTextField(
+        verbose_name=("body (HTML)"),
+        blank=True,
+        features=[
+            "h1",
+            "h2",
+            "h3",
+            "h4",
+            "h5",
+            "h6",
+            "bold",
+            "italic",
+            "ol",
+            "ul",
+            "hr",
+            "link",
+            "document-link",
+            "image",
+            "embed",
+            "footnotes",
+            "code",
+            "superscript",
+            "subscript",
+            "strikethrough",
+            "blockquote",
+        ],
     )
     body_mixed = StreamField(
         [
             ("heading", blocks.CharBlock(classname="full title")),
-            ("paragraph", blocks.RichTextBlock()),
+            ("paragraph", RichTextBlockWithFootnotes()),
             ("image", ImageChooserBlock()),
-            ("markdown", MarkdownBlock()),
         ],
         verbose_name="body (mixed)",
         blank=True,
@@ -253,15 +271,15 @@ class BlogPage(Page):
 
     add_toc = models.BooleanField(
         default=False,
-        verbose_name=_("Display TOC (Table Of Contents)"),
-        help_text=_("A TOC can be auto-generated"),
+        verbose_name=("Display TOC (Table Of Contents)"),
+        help_text=("A TOC can be auto-generated"),
     )
 
     tags = ClusterTaggableManager(through=BlogPageTag, blank=True)
     date = models.DateField(
-        _("Post date"),
+        ("Post date"),
         default=datetime.datetime.today,
-        help_text=_(
+        help_text=(
             "This date may be displayed on the blog post. It is not "
             "used to schedule posts to go live at a later date."
         ),
@@ -272,20 +290,17 @@ class BlogPage(Page):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
-        verbose_name=_("Header image"),
+        verbose_name=("Header image"),
     )
-    author = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
+    authors = models.CharField(
         blank=True,
         null=True,
-        limit_choices_to=limit_author_choices,
-        verbose_name=_("Author"),
-        on_delete=models.SET_NULL,
-        related_name="author_pages",
+        verbose_name="author(s)",
+        max_length=255,
+        help_text="Mention author(s) by the name to be displayed",
     )
 
     search_fields = Page.search_fields + [
-        index.SearchField("body_markdown"),
         index.SearchField("body_richtext"),
     ]
     blog_categories = models.ManyToManyField(
@@ -307,14 +322,12 @@ class BlogPage(Page):
             classname="publishing",
         ),
         FieldPanel("date"),
-        FieldPanel("author"),
+        FieldPanel("authors"),
     ]
 
     def get_body(self):
         if self.body_richtext:
             body = richtext(self.body_richtext)
-        elif self.body_markdown:
-            body = markdown(self.body_markdown)
         else:
             body = "".join([str(f.value) for f in self.body_mixed])
 
@@ -337,18 +350,9 @@ class BlogPage(Page):
         """
         [(name, [*children])]
         """
-        html = self.get_body()
-        soup = BeautifulSoup(html)
-        # Need to build this in a list, otherwise evaluating whether it is
-        # empty or not causes problems in templates
-        return_list = []
-        for element, children in toc(soup.find_all(["h1", "h2", "h3", "h4", "h5"])):
-            return_list.append((element, children))
-        return return_list
+        return get_toc(self.get_body())
 
     def save_revision(self, *args, **kwargs):
-        if not self.author:
-            self.author = self.owner
         return super(BlogPage, self).save_revision(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -366,8 +370,8 @@ class BlogPage(Page):
         return context
 
     class Meta:
-        verbose_name = _("Blog page")
-        verbose_name_plural = _("Blog pages")
+        verbose_name = "Blog page"
+        verbose_name_plural = "Blog pages"
 
     parent_page_types = ["blog.BlogIndexPage"]
 
@@ -403,8 +407,8 @@ class WordpressMapping(models.Model):
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="+",
-        verbose_name=_("Wagtail image"),
+        related_name="mappings",
+        verbose_name=("Wagtail image"),
     )
     document = models.ForeignKey(
         get_document_model_string(),
@@ -412,7 +416,7 @@ class WordpressMapping(models.Model):
         blank=True,
         on_delete=models.SET_NULL,
         related_name="+",
-        verbose_name=_("Wagtail image"),
+        verbose_name=("Wagtail image"),
     )
 
 
@@ -421,12 +425,11 @@ BlogPage.content_panels = [
     MultiFieldPanel(
         [
             FieldPanel("tags"),
-            InlinePanel("categories", label=_("Categories")),
+            InlinePanel("categories", label=("Categories")),
         ],
         heading="Tags and Categories",
     ),
     ImageChooserPanel("header_image"),
-    MarkdownPanel("body_markdown"),
     FieldPanel("body_richtext", classname="collapsed"),
     StreamFieldPanel("body_mixed"),
 ]
@@ -441,4 +444,4 @@ def import_fontawesome_stylesheet():
     output = ""
     for x in compressor.hunks():
         output += x
-    return format_html(output)
+    return format_html(compressor.output(forced=True))

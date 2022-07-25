@@ -1,12 +1,9 @@
 import datetime
+import html
 import re
 import time
-from html.parser import HTMLParser
 
 import lxml.etree as etree
-
-
-htmlparser = HTMLParser()
 
 
 class XML_parser(object):
@@ -28,7 +25,7 @@ class XML_parser(object):
             slug = cat.find(".//{wp}category_nicename").text
             cats_dict[slug] = {
                 "slug": slug,
-                "name": htmlparser.unescape(cat.find("./{wp}cat_name").text),
+                "name": html.unescape(cat.find("./{wp}cat_name").text),
                 "parent": cat.find("./{wp}category_parent").text,
                 "taxonomy": "category",
             }
@@ -48,7 +45,7 @@ class XML_parser(object):
         for e in tags:
             slug = e.find(".//{wp}tag_slug").text
             tags_dict[slug] = {"slug": slug}
-            name = htmlparser.unescape(
+            name = html.unescape(
                 e.find(".//{wp}tag_name").text
             )  # need some regex parsing here
             tags_dict[slug]["name"] = name
@@ -119,7 +116,7 @@ class XML_parser(object):
             if "category" in e.tag:
                 # get details
                 slug = e.attrib["nicename"]
-                name = htmlparser.unescape(e.text)
+                name = html.unescape(e.text)
                 # lookup the category or create one
                 cat_dict = self.category_dict.get(slug) or {
                     "slug": slug,
@@ -131,7 +128,7 @@ class XML_parser(object):
             elif e.tag[-3:] == "tag":
                 # get details
                 slug = e.attrib.get("tag_slug")
-                name = htmlparser.unescape(e.text)
+                name = html.unescape(e.text)
                 # lookup the tag or create one
                 tag_dict = self.tags_dict.get(slug) or {
                     "slug": slug,
@@ -202,11 +199,13 @@ class XML_parser(object):
         )
         ret_dict["ID"] = item_dict["{wp}post_id"]
         ret_dict["title"] = item_dict["title"]
+        ret_dict["origin_url"] = item_dict["link"]
         ret_dict["description"] = item_dict["description"]
         ret_dict["content"] = item_dict["{content}encoded"]
         ret_dict["attachment_url"] = item_dict.get("{wp}attachment_url")
         # fake user object
-        ret_dict["author"] = self.authors[item_dict["{dc}creator"]]
+        ret_dict["creator"] = self.authors[item_dict["{dc}creator"]]
+        ret_dict["authors"] = self.authors
         ret_dict["terms"] = item_dict.get("terms")
         if isinstance(item_dict["pubDate"], list):
             item_dict["pubDate"] = item_dict.get("{wp}post_date", "")
