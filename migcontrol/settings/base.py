@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "home",
     "search",
     "archive",
+    "library",
     "images",
     "wiki",
 ]

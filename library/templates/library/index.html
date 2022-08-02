@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h1 class="migcontrol-page-title">{{ page.title }}</h1>
+
+On this page, we'll list all the entries of the library by their language.
+
+<ul>
+{% for media_page in media_pages %}
+  <li><a href="{{ media_page.url }}">{{ media_page.title }}</a></li>
+{% endfor %}
+</ul>
+
+{% endblock content %}

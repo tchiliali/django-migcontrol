@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+
+<h1 class="migcontrol-page-title">{{ page.title }}</h1>
+
+{{ page.body|richtext }}
+
+<p>
+  <a href="{{ page.get_parent.url }}" class="btn btn-outline-primary"><i class="fa fa-angle-double-left"></i> {% trans "Back to index" %}</a>
+</p>
+
+{% endblock content %}
