@@ -6,6 +6,7 @@ import uuid
 from uuid import uuid4
 
 import bleach
+import tidy
 from bleach.sanitizer import ALLOWED_TAGS
 from bs4 import BeautifulSoup
 from django.apps import apps
@@ -22,6 +23,7 @@ from django.utils.html import linebreaks
 from django.utils.text import slugify
 from PIL import Image as PILImage
 from wagtail.core.models import Locale
+from wagtail.core.models import Page
 from wagtail.images import get_image_model
 from wagtail_footnotes.models import Footnote
 
@@ -33,6 +35,7 @@ from blog.models import BlogPageTag
 from blog.models import BlogTag
 from blog.models import WordpressMapping
 from blog.wp_xml_parser import XML_parser
+from wiki.models import WikiPage
 
 try:
     import lxml  # noqa
@@ -160,7 +163,7 @@ WP_POSTMETA_MAPPING = {
         "branche": ("organization_type", noop_mapping),
         "land": ("country", get_country),
         "standorte": ("locations", get_locations),
-        "kurztext": ("short_description", noop_mapping),
+        "kurztext": ("search_description", noop_mapping),
     },
     "blog.blogpage": {},
     "wiki.wikipage": {},
@@ -554,6 +557,8 @@ class Command(BaseCommand):
                     str(footnote.uuid)[:6],
                 ),
             )
+        if "[mfn]" in body:
+            raise Exception("Found remaining footnote tag in body {}".format(body))
         setattr(page, self.body_field_name, body)
         page.save()
 
@@ -633,13 +638,66 @@ class Command(BaseCommand):
             element.decompose()
 
         # Clean up unclosed tags
-        body = soup.decode_contents()
+        new_body = str(tidy.parseString(body, wrap=0, force_output=True))
+        if not new_body:
+            print("Could not parse HTML at all, must be some real garbage :)")
         return bleach.clean(
-            body,
+            new_body,
             tags=ALLOWED_TAGS + ["p", "h1", "h2", "h3", "h4", "h5", "caption", "img"],
             attributes=["href", "src", "alt"],
             strip=True,
         )
+
+    def body_insert_wiki_links(self, page):
+        body = page.get_body()
+        soup = BeautifulSoup(body, "html5lib")
+
+        # Beautiful soup unfortunately adds some noise to the structure, so we
+        # remove this again - see:
+        # https://stackoverflow.com/questions/21452823/beautifulsoup-how-should-i-obtain-the-body-contents
+        for attr in ["head", "html", "body"]:
+            if hasattr(soup, attr):
+                getattr(soup, attr).unwrap()
+
+        textNodes = soup.findAll(text=True)
+        wiki_link = re.compile(r"^[A-Z].+")
+        for textNode in textNodes:
+            new_text = str(textNode)
+            replacements_made = False
+            replaced_words = [page.title]
+            for word in new_text.split():
+                if (
+                    len(word) > 4
+                    and word not in replaced_words
+                    and wiki_link.match(word)
+                ):
+                    # We just choose the first match because it's legal in the
+                    # database to have two wiki pages with the same title.
+                    wiki_page = WikiPage.objects.filter(
+                        title=word, locale=page.locale
+                    ).first()
+                    if not wiki_page:
+                        continue
+                    replacements_made = True
+                    replaced_words.append(word)
+                    new_text = new_text.replace(
+                        word,
+                        """<a linktype="page" id="{}">{}</a>""".format(
+                            wiki_page.id,
+                            word,
+                        ),
+                    )
+
+            if replacements_made:
+                node = BeautifulSoup(new_text, "html5lib")
+                for attr in ["head", "html", "body"]:
+                    if hasattr(node, attr):
+                        getattr(node, attr).unwrap()
+
+                textNode.replaceWith(node)
+
+        setattr(page, self.body_field_name, str(soup))
+        page.save()
 
     def clean_body_final(self, body):
         soup = BeautifulSoup(body, "html5lib")
@@ -665,6 +723,8 @@ class Command(BaseCommand):
                 new_title = self.convert_html_entities(title)
                 title = new_title
             slug = slugify(post.get("slug"))
+            if not slug:
+                slug = slugify(post.get("title"))
             if not slug:
                 print("NO SLUG FOR POST WITH ID {}".format(post_id))
                 continue
@@ -763,6 +823,7 @@ class Command(BaseCommand):
 
             self.create_categories_and_tags(page, categories)
             self.create_footnotes_from_mfn_tags(page)
+            self.body_insert_wiki_links(page)
 
             translation.activate(restore_locale)
 
@@ -783,48 +844,39 @@ class Command(BaseCommand):
         origin_url,
         **kwargs,
     ):
+        mappings = self.mappings(
+            index,
+            locale,
+            post_id,
+            published,
+            title,
+            date,
+            slug,
+            body,
+            excerpt,
+            user,
+            authors,
+            meta,
+            origin_url,
+        )
+
+        if mappings.get("locale") and mappings.get("locale") != locale:
+            locale = mappings.get("locale")
+            index = index._meta.model.objects.get(
+                slug=index.slug, locale=mappings.get("locale")
+            )
+            print("Changed to index: {} {}".format(index, index.locale))
 
         try:
-            new_entry = self.PostModel.objects.get(slug=slug)
-            for k, v in self.mappings(
-                index,
-                locale,
-                post_id,
-                published,
-                title,
-                date,
-                slug,
-                body,
-                excerpt,
-                user,
-                authors,
-                meta,
-                origin_url,
-            ).items():
-                setattr(new_entry, k, v)
-        except self.PostModel.DoesNotExist:
-
-            mappings = self.mappings(
-                index,
-                locale,
-                post_id,
-                published,
-                title,
-                date,
-                slug,
-                body,
-                excerpt,
-                user,
-                authors,
-                meta,
-                origin_url,
+            new_entry = (
+                index.get_children()
+                .exact_type(self.PostModel)
+                .specific()
+                .get(slug=slug)
             )
-
-            if mappings.get("locale") != locale:
-                index = index._meta.model.objects.get(
-                    slug=index.slug, locale=mappings.get("locale")
-                )
-                print("Changed to index: {} {}".format(index, index.locale))
+            for k, v in mappings.items():
+                setattr(new_entry, k, v)
+        except Page.DoesNotExist:
 
             try:
                 new_entry = index.add_child(

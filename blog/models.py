@@ -302,6 +302,7 @@ class BlogPage(Page):
 
     search_fields = Page.search_fields + [
         index.SearchField("body_richtext"),
+        index.SearchField("body_mixed"),
     ]
     blog_categories = models.ManyToManyField(
         BlogCategory, through=BlogCategoryBlogPage, blank=True

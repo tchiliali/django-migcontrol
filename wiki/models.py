@@ -1,5 +1,3 @@
-import re
-
 from bs4 import BeautifulSoup
 from django.db import models
 from django.template.defaultfilters import slugify
@@ -58,8 +56,6 @@ class WikiPage(Page):
         default="",
     )
 
-    short_description = models.TextField(blank=True, null=True)
-
     authors = models.CharField(
         blank=True,
         null=True,
@@ -108,8 +104,8 @@ class WikiPage(Page):
 
     content_panels = Page.content_panels + [
         FieldPanel("country"),
-        FieldPanel("short_description"),
         FieldPanel("description"),
+        FieldPanel("authors"),
         InlinePanel("footnotes", label="Footnotes"),
     ]
 
@@ -132,44 +128,8 @@ class WikiPage(Page):
             if hasattr(soup, attr):
                 getattr(soup, attr).unwrap()
 
+        # Now let's add some id=... attributes to all h{1,2,3,4,5}
         for element in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
             element["id"] = "header-" + slugify(element.text)
-
-        textNodes = soup.findAll(text=True)
-        wiki_link = re.compile(r"^[A-Z].+")
-        for textNode in textNodes:
-            new_text = str(textNode)
-            replacements_made = False
-            replaced_words = [self.title]
-            for word in new_text.split():
-                if (
-                    len(word) > 4
-                    and word not in replaced_words
-                    and wiki_link.match(word)
-                ):
-                    # We just choose the first match because it's legal in the
-                    # database to have two wiki pages with the same title.
-                    page = WikiPage.objects.filter(
-                        title=word, locale=self.locale
-                    ).first()
-                    if not page:
-                        continue
-                    replacements_made = True
-                    replaced_words.append(word)
-                    new_text = new_text.replace(
-                        word,
-                        """<a href="{}">{}</a>""".format(
-                            page.url,
-                            word,
-                        ),
-                    )
-
-            if replacements_made:
-                node = BeautifulSoup(new_text, "html5lib")
-                for attr in ["head", "html", "body"]:
-                    if hasattr(node, attr):
-                        getattr(node, attr).unwrap()
-
-                textNode.replaceWith(node)
 
         return str(soup)
