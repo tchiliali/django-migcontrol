@@ -446,9 +446,6 @@ class Command(BaseCommand):
 
         self.create_blog_pages(posts, self.index_page)
 
-    def get_body_attr_name(self):
-        return self.mappings.get()
-
     def prepare_url(self, url):
         if url.startswith("//"):
             url = "http:{}".format(url)
@@ -673,7 +670,7 @@ class Command(BaseCommand):
         return new_body
 
     def create_footnotes_from_mfn_tags(self, page):
-        body = page.get_body()
+        body = getattr(page, self.body_field_name)
         mfn_p = re.compile(r"\[mfn\](.+?)\[\/mfn\]", re.M)
         mfns = mfn_p.finditer(body)
         if not mfns:
@@ -818,7 +815,7 @@ class Command(BaseCommand):
         )
 
     def body_insert_wiki_links(self, page):
-        body = page.get_body()
+        body = getattr(page, self.body_field_name)
         soup = BeautifulSoup(body, "html5lib")
 
         # Beautiful soup unfortunately adds some noise to the structure, so we

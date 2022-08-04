@@ -47,84 +47,6 @@ class LibraryIndexPage(Page):
         return context
 
 
-class MediaPage(Page):
-
-    body = RichTextField()
-
-    feature_image = models.ForeignKey(
-        get_image_model_string(),
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="+",
-        verbose_name=("feature image"),
-    )
-
-    authors = models.CharField(
-        max_length=1024,
-        blank=True,
-        null=True,
-        verbose_name=_("authors"),
-    )
-
-    full_title = models.CharField(
-        max_length=1024,
-        blank=True,
-        null=True,
-        verbose_name=_("full title"),
-    )
-
-    publisher = models.CharField(
-        max_length=1024,
-        blank=True,
-        null=True,
-        verbose_name=_("publisher or journal"),
-    )
-
-    year = models.PositiveSmallIntegerField(
-        default=timezone.now().year,
-        blank=True,
-        null=True,
-        verbose_name=_("year of publication"),
-    )
-
-    media_type = models.CharField(
-        max_length=128,
-        verbose_name=_("media type"),
-        blank=True,
-        null=True,
-    )
-
-    link = models.URLField(
-        max_length=1024,
-        blank=True,
-        null=True,
-        verbose_name=_("Link (URL)"),
-    )
-
-    def get_display_country(self):
-        return ", ".join(map(lambda c: c.name, self.country))
-
-    def get_display_locations(self):
-        return ", ".join(str(ll.location) for ll in self.locations.all())
-
-    def get_body(self):  # noqa: max-complexity=11
-        body = richtext(self.body)
-        return str(body)
-
-    content_panels = Page.content_panels + [
-        FieldPanel("body"),
-        FieldPanel("authors"),
-        FieldPanel("full_title"),
-        FieldPanel("publisher"),
-        FieldPanel("year"),
-        FieldPanel("media_type"),
-        FieldPanel("link"),
-        InlinePanel("regions", label="regions"),
-        InlinePanel("topics", label="topics"),
-    ]
-
-
 @register_snippet
 class RegionSnippet(TranslatableMixin, models.Model):
 
@@ -189,3 +111,88 @@ class MediaPageTopic(models.Model):
 
     class Meta:
         unique_together = ("page", "topic")
+
+
+class MediaPage(Page):
+
+    body = RichTextField()
+
+    feature_image = models.ForeignKey(
+        get_image_model_string(),
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+        verbose_name=("feature image"),
+    )
+
+    authors = models.CharField(
+        max_length=1024,
+        blank=True,
+        null=True,
+        verbose_name=_("authors"),
+    )
+
+    full_title = models.CharField(
+        max_length=1024,
+        blank=True,
+        null=True,
+        verbose_name=_("full title"),
+    )
+
+    publisher = models.CharField(
+        max_length=1024,
+        blank=True,
+        null=True,
+        verbose_name=_("publisher or journal"),
+    )
+
+    year = models.PositiveSmallIntegerField(
+        default=timezone.now().year,
+        blank=True,
+        null=True,
+        verbose_name=_("year of publication"),
+    )
+
+    media_type = models.CharField(
+        max_length=128,
+        verbose_name=_("media type"),
+        blank=True,
+        null=True,
+    )
+
+    link = models.URLField(
+        max_length=1024,
+        blank=True,
+        null=True,
+        verbose_name=_("Link (URL)"),
+    )
+
+    media_topics = models.ManyToManyField(
+        TopicSnippet, through=MediaPageTopic, blank=True
+    )
+    media_regions = models.ManyToManyField(
+        RegionSnippet, through=MediaPageRegion, blank=True
+    )
+
+    def get_display_country(self):
+        return ", ".join(map(lambda c: c.name, self.country))
+
+    def get_display_locations(self):
+        return ", ".join(str(ll.location) for ll in self.locations.all())
+
+    def get_body(self):  # noqa: max-complexity=11
+        body = richtext(self.body)
+        return str(body)
+
+    content_panels = Page.content_panels + [
+        FieldPanel("body"),
+        FieldPanel("authors"),
+        FieldPanel("full_title"),
+        FieldPanel("publisher"),
+        FieldPanel("year"),
+        FieldPanel("media_type"),
+        FieldPanel("link"),
+        InlinePanel("regions", label="regions"),
+        InlinePanel("topics", label="topics"),
+    ]

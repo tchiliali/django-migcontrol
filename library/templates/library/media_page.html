@@ -34,6 +34,26 @@
   <tr>
     <th>{% trans "Link" %}</th><td>{% if page.link%}<a href="page.link" target="_blank">{{ page.link }}</a>{% else %}{% trans "None provided" %}{% endif %}</td>
   </tr>
+  <tr>
+    <th>{% trans "Topics" %}</th>
+    <td>
+      {% for topic in page.media_topics.all %}
+        {{ topic.name }}{% if not forloop.last %},{% endif %}
+      {% empty %}
+        {% trans "None added" %}
+      {% endfor %}
+    </td>
+  </tr>
+  <tr>
+    <th>{% trans "Regions" %}</th>
+    <td>
+      {% for region in page.media_regions.all %}
+        {{ region.name }}{% if not forloop.last %},{% endif %}
+      {% empty %}
+        {% trans "None added" %}
+      {% endfor %}
+    </td>
+  </tr>
 
 </table>
 
