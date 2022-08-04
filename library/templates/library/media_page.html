@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load static %}
+{% load wagtailcore_tags %}
+
+{% block content %}
+
+<h1 class="migcontrol-page-title">{{ page.title }}</h1>
+
+{% if page.authors %}
+<p class="text-primary">
+    <span class="fa fa-clock"></span>
+    {{ page.first_published_at|date:"F jS, Y" }}
+    - {% trans "added by" %}: {{ page.authors|default:"" }}
+</p>
+{% endif %}
+
+{{ page.body|richtext }}
+
+<table class="table table-bordered">
+
+  <tr>
+    <th>{% trans "Full title" %}</th><td>{{ page.full_title|default:_("Unspecified") }}</td>
+  </tr>
+  <tr>
+    <th>{% trans "Publisher" %}</th><td>{{ page.publisher|default:_("Unspecified") }}</td>
+  </tr>
+  <tr>
+    <th>{% trans "Year" %}</th><td>{{ page.year|default:_("Unspecified") }}</td>
+  </tr>
+  <tr>
+    <th>{% trans "Media type" %}</th><td>{{ page.media_type|default:_("Unspecified") }}</td>
+  </tr>
+  <tr>
+    <th>{% trans "Link" %}</th><td>{% if page.link%}<a href="page.link" target="_blank">{{ page.link }}</a>{% else %}{% trans "None provided" %}{% endif %}</td>
+  </tr>
+  <tr>
+    <th>{% trans "Topics" %}</th>
+    <td>
+      {% for topic in page.media_topics.all %}
+        {{ topic.name }}{% if not forloop.last %},{% endif %}
+      {% empty %}
+        {% trans "None added" %}
+      {% endfor %}
+    </td>
+  </tr>
+  <tr>
+    <th>{% trans "Regions" %}</th>
+    <td>
+      {% for region in page.media_regions.all %}
+        {{ region.name }}{% if not forloop.last %},{% endif %}
+      {% empty %}
+        {% trans "None added" %}
+      {% endfor %}
+    </td>
+  </tr>
+
+</table>
+
+<p>
+  <a href="{{ page.get_parent.url }}" class="btn btn-outline-primary"><i class="fa fa-angle-double-left"></i> {% trans "Back to index" %}</a>
+</p>
+
+{% endblock content %}
