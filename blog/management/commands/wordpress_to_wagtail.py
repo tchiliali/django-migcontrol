@@ -233,6 +233,7 @@ def get_archive_page_mapping(
         "description": body,
         "locale": locale,
         "live": published,
+        "first_published_at": date,
     }
 
 
@@ -262,6 +263,7 @@ def get_media_page_mapping(
         "body": body,
         "locale": locale,
         "live": published,
+        "first_published_at": date,
     }
 
 
@@ -301,6 +303,7 @@ def get_wiki_page_mapping(
         "description": body,
         "locale": locale,
         "live": published,
+        "first_published_at": date,
     }
 
 
@@ -335,6 +338,7 @@ def get_blog_page_mapping(
         # search_description is already set
         # "search_description": excerpt,
         "date": date,
+        "first_published_at": date,
         "body_richtext": body,
         "owner": user,
         # Not automatic mapping at the moment, we do it manually to check if

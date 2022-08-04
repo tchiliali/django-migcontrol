@@ -37,7 +37,13 @@ class LibraryIndexPage(Page):
 
     def get_context(self, request):
         context = super().get_context(request)
-        context["media_pages"] = self.get_children().live().type(MediaPage)
+        context["media_pages"] = (
+            self.get_children()
+            .live()
+            .type(MediaPage)
+            .order_by("-first_published_at")
+            .specific()
+        )
         return context
 
 

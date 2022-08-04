@@ -1,16 +1,40 @@
 {% extends "base.html" %}
 {% load static %}
+{% load i18n %}
+{% load wagtailcore_tags %}
 
 {% block content %}
 
 <h1 class="migcontrol-page-title">{{ page.title }}</h1>
 
-On this page, we'll list all the entries of the library by their language.
+{% include_block page.body %}
 
-<ul>
-{% for media_page in media_pages %}
-  <li><a href="{{ media_page.url }}">{{ media_page.title }}</a></li>
-{% endfor %}
-</ul>
+<table class="table table-sm table-bordered table-striped">
+
+  <tr>
+    <th class="table-main-column">
+      {% trans "Title" %}
+    </th>
+    <th>
+      {% trans "Publisher" %}
+    </th>
+    <th class="text-right">
+      {% trans "Added" %}
+    </th>
+    <th class="text-right">
+      {% trans "Media" %}
+    </th>
+  </tr>
+
+  {% for media_page in media_pages %}
+  <tr>
+    <td><a href="{{ media_page.url }}">{{ media_page.title }}</a></td>
+    <td>{{ media_page.publisher|default:_("Unspecified") }}</td>
+    <td class="text-right">{{ media_page.first_published_at|date:"Y-m-d" }}</td>
+    <td class="text-right">{{ media_page.media_type|default:_("Unspecified") }}</td>
+  </tr>
+  {% endfor %}
+
+</table>
 
 {% endblock content %}
