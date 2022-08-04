@@ -136,7 +136,9 @@ def get_library_image_mapping(image, page, index):
 
 def int_or_none_mapping(year, page, index):
     try:
-        return int(year)
+        year = int(year)
+        year = None if year > 2030 else year
+        return year
     except ValueError:
         return None
 
