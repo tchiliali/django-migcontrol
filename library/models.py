@@ -36,14 +36,19 @@ class LibraryIndexPage(Page):
     ]
 
     def get_context(self, request):
+        from .forms import LibraryFilterForm
+
         context = super().get_context(request)
-        context["media_pages"] = (
-            self.get_children()
-            .live()
-            .type(MediaPage)
-            .order_by("-first_published_at")
-            .specific()
-        )
+
+        filter_form = LibraryFilterForm(request.GET)
+
+        qs = self.get_children().live().type(MediaPage).order_by("title").specific()
+
+        if filter_form.is_valid():
+            qs = filter_form.apply_filter(qs)
+
+        context["filter_form"] = filter_form
+        context["media_pages"] = qs
         return context
 
 

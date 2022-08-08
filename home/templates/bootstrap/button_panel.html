@@ -1,0 +1,15 @@
+<div class="row mb-3" style="margin-bottom: 10px;">
+  <div class="col-md-4"></div>
+  <div class="col-md-8">
+    <button type="submit" class="btn {{ submit_css_class|default:"btn-primary" }}">{{ button_submit }}</button>
+    {% if submit2 %}
+      <button type="submit" name="{{ submit2.name }}" class="btn btn-secondary">{{ submit2.label }}</button>
+    {% endif %}
+    {% if go_back %}
+    <a href="{{ go_back.referer }}" type="submit" class="btn btn-secondary">
+      {{ go_back.label }}
+    </a>
+    {% endif %}
+  </div>
+
+</div>
