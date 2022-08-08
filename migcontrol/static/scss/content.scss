@@ -1,4 +1,4 @@
-.migcontrol-contents-container, .migcontrol-contents-sidebar
+.migcontrol-contents-container
 {
     /* Floating images */
     clear: after;
@@ -12,9 +12,6 @@
         margin: 20px;
     }
 
-    h1, h2, h3, h4, h5 {
-        font-weight: bold;
-    }
     h1 {
         margin-top: 20px;
     }
@@ -86,4 +83,8 @@
 
 .btn-primary {
     color: #FFF;
+}
+
+h1, h2, h3, h4, h5 {
+    font-weight: bold;
 }

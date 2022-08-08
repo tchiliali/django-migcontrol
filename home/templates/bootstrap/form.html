@@ -1,0 +1,9 @@
+{% if not skip_csrf_token %}{% csrf_token %}{% endif %}
+
+{% include "bootstrap/formerrors.html" %}
+
+{% for field in form %}
+
+  {% include "bootstrap/formfield.html" %}
+
+{% endfor %}
