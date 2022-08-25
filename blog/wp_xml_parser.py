@@ -116,12 +116,14 @@ class XML_parser(object):
             if "category" in e.tag:
                 # get details
                 slug = e.attrib["nicename"]
+                domain = e.get("domain", None)
                 name = html.unescape(e.text)
                 # lookup the category or create one
                 cat_dict = self.category_dict.get(slug) or {
                     "slug": slug,
                     "name": name,
                     "taxonomy": "category",
+                    "domain": domain,
                 }
                 ret_dict["terms"]["category"].append(cat_dict)
 

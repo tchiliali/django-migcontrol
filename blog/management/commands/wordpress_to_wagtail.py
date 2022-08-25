@@ -11,9 +11,11 @@ from bleach.sanitizer import ALLOWED_TAGS
 from bs4 import BeautifulSoup
 from django.apps import apps
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.core.management.base import CommandError
+from django.core.validators import URLValidator
 from django.db import transaction
 from django.db.models import Q
 from django.template.defaultfilters import striptags
@@ -35,6 +37,10 @@ from blog.models import BlogPageTag
 from blog.models import BlogTag
 from blog.models import WordpressMapping
 from blog.wp_xml_parser import XML_parser
+from library.models import MediaPageRegion
+from library.models import MediaPageTopic
+from library.models import RegionSnippet
+from library.models import TopicSnippet
 from wiki.models import WikiPage
 
 try:
@@ -121,6 +127,31 @@ def get_country(land, page, index):  # noqa: max-complexity=27
         raise ValueError
 
 
+def get_library_image_mapping(image, page, index):
+    try:
+        page.feature_image = WordpressMapping.objects.get(wp_post_id=image).image
+    except WordpressMapping.DoesNotExist:
+        print(f"Featured Image Post ID {image} has not been imported")
+
+
+def int_or_none_mapping(year, page, index):
+    try:
+        year = int(year)
+        year = None if year > 2030 else year
+        return year
+    except ValueError:
+        return None
+
+
+def url_or_none_mapping(url, page, index):
+    validator = URLValidator()
+    try:
+        validator(url)
+        return url
+    except ValidationError:
+        return None
+
+
 def get_locations(locations, page, index):
     locations = locations.replace(", ", ",")
     for location in locations.split(","):
@@ -167,6 +198,14 @@ WP_POSTMETA_MAPPING = {
     },
     "blog.blogpage": {},
     "wiki.wikipage": {},
+    "library.mediapage": {
+        "full_title": ("full_title", noop_mapping),
+        "arch_year": ("year", int_or_none_mapping),
+        "arch_publisher": ("publisher", noop_mapping),
+        "document_type": ("media_type", noop_mapping),
+        "arch_link": ("link", url_or_none_mapping),
+        "arch_image": ("feature_image", get_library_image_mapping),
+    },
 }
 
 
@@ -196,6 +235,37 @@ def get_archive_page_mapping(
         "description": body,
         "locale": locale,
         "live": published,
+        "first_published_at": date,
+    }
+
+
+def get_media_page_mapping(
+    index,
+    locale,
+    post_id,
+    published,
+    title,
+    date,
+    slug,
+    body,
+    excerpt,
+    user,
+    authors,
+    meta,
+    origin_url,
+):
+    return {
+        "title": title,
+        "slug": slug,
+        # Not automatic mapping at the moment, we do it manually to check if
+        # search_description is already set
+        # "search_description": excerpt,
+        "owner": user,
+        # "authors": authors,
+        "body": body,
+        "locale": locale,
+        "live": published,
+        "first_published_at": date,
     }
 
 
@@ -235,6 +305,7 @@ def get_wiki_page_mapping(
         "description": body,
         "locale": locale,
         "live": published,
+        "first_published_at": date,
     }
 
 
@@ -269,6 +340,7 @@ def get_blog_page_mapping(
         # search_description is already set
         # "search_description": excerpt,
         "date": date,
+        "first_published_at": date,
         "body_richtext": body,
         "owner": user,
         # Not automatic mapping at the moment, we do it manually to check if
@@ -283,6 +355,7 @@ WP_POST_MAPPING = {
     "archive.archivepage": get_archive_page_mapping,
     "blog.blogpage": get_blog_page_mapping,
     "wiki.wikipage": get_wiki_page_mapping,
+    "library.mediapage": get_media_page_mapping,
 }
 
 # Model field name to store the imported body (unfortynately varies)
@@ -290,6 +363,7 @@ WP_HTML_BODY_FIELD = {
     "archive.archivepage": "description",
     "blog.blogpage": "body_richtext",
     "wiki.wikipage": "description",
+    "library.mediapage": "body",
 }
 
 
@@ -374,9 +448,6 @@ class Command(BaseCommand):
 
         self.create_blog_pages(posts, self.index_page)
 
-    def get_body_attr_name(self):
-        return self.mappings.get()
-
     def prepare_url(self, url):
         if url.startswith("//"):
             url = "http:{}".format(url)
@@ -394,6 +465,76 @@ class Command(BaseCommand):
     def convert_html_entities(self, text, *args, **options):
         """converts html symbols so they show up correctly in wagtail"""
         return html.unescape(text)
+
+    def set_header_image(  # noqa max-complexity: 12
+        self, new_entry, featured_image, post_id
+    ):
+        header_image = None
+        if not new_entry.header_image and featured_image is not None:
+            source = featured_image["source"]
+            __, file_ = os.path.split(source)
+            source = source.replace("stage.swoon", "swoon")
+            try:
+                remote_image = urllib.request.urlretrieve(self.prepare_url(source))
+                img_buffer = open(remote_image[0], "rb")
+                width, height = PILImage.open(img_buffer).size
+                img_buffer.seek(0)
+                header_image = Image(
+                    title=featured_image["title"], width=width, height=height
+                )
+                header_image.file.save(file_, File(open(img_buffer, "rb")))
+                header_image.save()
+                print("Found and saved remote image from featured_image value")
+            except UnicodeEncodeError:
+                print("unable to set header image {}".format(source))
+
+        elif not new_entry.header_image:
+            api_url = urllib.parse.urljoin(
+                self.wordpress_base_url, f"wp-json/wp/v2/posts/{post_id}?_embed"
+            )
+            try:
+                response = urllib.request.urlopen(api_url)
+                print(f"Success fetching {api_url}")
+                json_data = json.loads(response.read())
+                if json_data["featured_media"]:
+                    print("Using featured_media value")
+                    try:
+                        featured_image_post_id = json_data["featured_media"]
+                        header_image = WordpressMapping.objects.get(
+                            wp_post_id=featured_image_post_id
+                        ).image
+                    except WordpressMapping.DoesNotExist:
+                        print(
+                            f"Featured Image Post ID {featured_image_post_id} has not been imported"
+                        )
+                elif json_data["featured_img"]:
+                    print("fetching {}".format(json_data["featured_img"]))
+                    __, file_ = os.path.split(json_data["featured_img"])
+                    remote_image = urllib.request.urlretrieve(
+                        urllib.parse.urljoin(
+                            self.wordpress_base_url, json_data["featured_img"]
+                        ),
+                    )
+                    img_buffer = open(remote_image[0], "rb")
+                    width, height = PILImage.open(img_buffer).size
+                    img_buffer.seek(0)
+                    header_image = Image(
+                        title=f"Featured image for {new_entry.title}",
+                        width=width,
+                        height=height,
+                    )
+                    header_image.file.save(file_, File(img_buffer))
+                    header_image.save()
+
+            except urllib.error.HTTPError:
+                print(f"Error fetching {api_url}")
+
+        if not new_entry.header_image:
+            print("Setting header image to: {}".format(header_image))
+            new_entry.header_image = header_image
+            new_entry.save()
+        else:
+            print("Header image already exists")
 
     def update_internal_links(self, body):  # noqa max-complexity: 14
         """create Image objects and transfer image files to media root"""
@@ -531,7 +672,7 @@ class Command(BaseCommand):
         return new_body
 
     def create_footnotes_from_mfn_tags(self, page):
-        body = page.get_body()
+        body = getattr(page, self.body_field_name)
         mfn_p = re.compile(r"\[mfn\](.+?)\[\/mfn\]", re.M)
         mfns = mfn_p.finditer(body)
         if not mfns:
@@ -575,7 +716,9 @@ class Command(BaseCommand):
             user.save()
         return user
 
-    def create_categories_and_tags(self, page, categories):
+    def create_categories_and_tags(self, page, categories):  # noqa max-complexity: 13
+        if not page:
+            raise Exception("No page?")
         tags_for_blog_entry = []
         categories_for_blog_entry = []
         for records in categories:
@@ -583,8 +726,33 @@ class Command(BaseCommand):
                 tag_name = records["name"]
                 new_tag = BlogTag.objects.get_or_create(name=tag_name)[0]
                 tags_for_blog_entry.append(new_tag)
+            elif records.get("domain", None) == "region":
+                # This is a special case for Library contents that have defined
+                # categories with a "domain" region
+                region = records["name"]
+                region_snippet, __ = RegionSnippet.objects.get_or_create(
+                    name=region,
+                    locale=page.locale,
+                )
+                MediaPageRegion.objects.get_or_create(
+                    page=page,
+                    region=region_snippet,
+                )
 
-            if records["taxonomy"] == "category":
+            elif records.get("domain", None) == "topics":
+                # This is a special case for Library contents that have defined
+                # categories with a "domain" region
+                topic = records["name"]
+                topic_snippet, __ = TopicSnippet.objects.get_or_create(
+                    name=topic,
+                    locale=page.locale,
+                )
+                MediaPageTopic.objects.get_or_create(
+                    page=page,
+                    topic=topic_snippet,
+                )
+
+            elif records["taxonomy"] == "category":
                 category_name = records["name"]
                 slug = records["slug"]
                 new_category = BlogCategory.objects.get_or_create(
@@ -649,7 +817,7 @@ class Command(BaseCommand):
         )
 
     def body_insert_wiki_links(self, page):
-        body = page.get_body()
+        body = getattr(page, self.body_field_name)
         soup = BeautifulSoup(body, "html5lib")
 
         # Beautiful soup unfortunately adds some noise to the structure, so we
@@ -911,72 +1079,13 @@ class Command(BaseCommand):
 
         new_entry.save()
 
-        header_image = None
+        # Set the header image if the model has that attribute
         featured_image = kwargs.get("featured_image", None)
-        if not new_entry.header_image and featured_image is not None:
-            source = featured_image["source"]
-            __, file_ = os.path.split(source)
-            source = source.replace("stage.swoon", "swoon")
-            try:
-                remote_image = urllib.request.urlretrieve(self.prepare_url(source))
-                img_buffer = open(remote_image[0], "rb")
-                width, height = PILImage.open(img_buffer).size
-                img_buffer.seek(0)
-                header_image = Image(
-                    title=featured_image["title"], width=width, height=height
-                )
-                header_image.file.save(file_, File(open(img_buffer, "rb")))
-                header_image.save()
-                print("Found and saved remote image from featured_image value")
-            except UnicodeEncodeError:
-                print("unable to set header image {}".format(source))
+        if hasattr(new_entry, "header_image"):
+            self.set_header_image(new_entry, featured_image, post_id)
 
-        elif not new_entry.header_image:
-            api_url = urllib.parse.urljoin(
-                self.wordpress_base_url, f"wp-json/wp/v2/posts/{post_id}?_embed"
-            )
-            try:
-                response = urllib.request.urlopen(api_url)
-                print(f"Success fetching {api_url}")
-                json_data = json.loads(response.read())
-                if json_data["featured_media"]:
-                    print("Using featured_media value")
-                    try:
-                        featured_image_post_id = json_data["featured_media"]
-                        header_image = WordpressMapping.objects.get(
-                            wp_post_id=featured_image_post_id
-                        ).image
-                    except WordpressMapping.DoesNotExist:
-                        print(
-                            f"Featured Image Post ID {featured_image_post_id} has not been imported"
-                        )
-                elif json_data["featured_img"]:
-                    print("fetching {}".format(json_data["featured_img"]))
-                    __, file_ = os.path.split(json_data["featured_img"])
-                    remote_image = urllib.request.urlretrieve(
-                        urllib.parse.urljoin(
-                            self.wordpress_base_url, json_data["featured_img"]
-                        ),
-                    )
-                    img_buffer = open(remote_image[0], "rb")
-                    width, height = PILImage.open(img_buffer).size
-                    img_buffer.seek(0)
-                    header_image = Image(
-                        title=f"Featured image for {title}", width=width, height=height
-                    )
-                    header_image.file.save(file_, File(img_buffer))
-                    header_image.save()
-
-            except urllib.error.HTTPError:
-                print(f"Error fetching {api_url}")
-
-        if not new_entry.header_image:
-            print("Setting header image to: {}".format(header_image))
-            new_entry.header_image = header_image
-            new_entry.save()
-        else:
-            print("Header image already exists")
         wp_url = urllib.parse.urljoin(self.wordpress_base_url, slug)
+
         try:
             wp_mapping = WordpressMapping.objects.get(
                 Q(wp_post_id=post_id) | (Q(wp_url=wp_url)) if wp_url else Q()

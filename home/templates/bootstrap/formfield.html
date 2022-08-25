@@ -1,0 +1,46 @@
+{% load bootstrap_tags %}
+
+{% if field.is_hidden %}
+  {{ field }}
+{% else %}
+
+<div id="fieldset_{{ field.auto_id }}" class="input-group mb-3 row{% if field.errors %} has-danger{% endif %}">
+  {% if field.label %}
+    <label for="{{ field.id_for_label }}" class="form-label col-md-4 {% if field.field.required %}form-label-required{% endif %}">
+    {{ field.label|safe }}
+    </label>
+  {% endif %}
+
+  <div class="col-md-8">
+
+    {% if field.field.required %}
+      <div class="input-group">
+    {% endif %}
+
+    {% if field.errors %}
+      {{ field|bootstrap_render_field:'form-control-danger' }}
+    {% else %}
+      {{ field|bootstrap_render_field:'' }}
+    {% endif %}
+
+    {% if field.field.required %}
+      <div class="input-group-text">*</div>
+      </div>
+    {% endif %}
+
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <p id="error_{{ forloop.counter }}_{{ field.auto_id }}" class="text-danger">
+          {{ error }}
+        </p>
+      {% endfor %}
+    {% endif %}
+
+    {% if field.help_text %}
+      <p class="text-muted">{{ field.help_text|safe }}</p>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endif %}
